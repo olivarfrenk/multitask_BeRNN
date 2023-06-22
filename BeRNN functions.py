@@ -94,7 +94,7 @@ def get_default_hp_BeRNN(ruleset):
             'n_output': n_output,
             # number of recurrent units
             'n_rnn': 256,
-            # todo: added by Oliver - is used to randomly choose the position of the stimuli on the circle in the trials
+            # random number used for several random initializations
             'rng' : np.random.RandomState(seed=0),
             # number of input units
             'ruleset': ruleset,
@@ -102,9 +102,9 @@ def get_default_hp_BeRNN(ruleset):
             'save_name': 'test_model',
             # learning rate
             'learning_rate': 0.001,
-            # intelligent synapses parameters, tuple (c, ksi)
-            'c_intsyn': 0,
-            'ksi_intsyn': 0,
+            # # intelligent synapses parameters, tuple (c, ksi)
+            # 'c_intsyn': 0,
+            # 'ksi_intsyn': 0,
             }
 
     return hp
@@ -133,21 +133,6 @@ def gen_feed_dict_BeRNN(model, Input, Output, hp):
     """Generate feed_dict for session run."""
     if hp['in_type'] == 'normal':
         feed_dict = {model.x: Input,
-                     model.y: Output}
-    elif hp['in_type'] == 'multi':
-        n_time, batch_size = Input.shape[:2]
-        new_shape = [n_time,
-                     batch_size,
-                     hp['rule_start']*hp['n_rule']]
-
-        x = np.zeros(new_shape, dtype=np.float32)
-        for i in range(batch_size):
-            ind_rule = np.argmax(Input[0, i, hp['rule_start']:])
-            i_start = ind_rule*hp['rule_start']
-            x[:, i, i_start:i_start+hp['rule_start']] = \
-                Input[:, i, :hp['rule_start']]
-
-        feed_dict = {model.x: x,
                      model.y: Output}
     else:
         raise ValueError()
@@ -195,7 +180,7 @@ def get_perf_BeRNN(y_hat, y_loc):
 
     # Fixation and location of y_hat
     y_hat_fix = y_hat[..., 0]
-    y_hat_loc = popvec_BeRNN(y_hat[..., 1:])    # debugging evaluation: popvec_BeRNN(y_hat_test[..., 1:])
+    y_hat_loc = popvec_BeRNN(y_hat[..., 1:])
 
     # Fixating? Correctly saccading?
     fixating = y_hat_fix > 0.5
@@ -252,7 +237,7 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
     else:
         rule_name_print = ' & '.join(rule_train)
 
-    print('VALIDATION')
+    print('VALIDATION ##########################################################################')
     print('Trial {:7d}'.format(log['trials'][-1]) +      # [-1] calls the last element of a list
           '  | Time {:0.2f} s'.format(log['times'][-1]) +
           '  | Now training ' + rule_name_print)
@@ -260,7 +245,7 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
     for rule_test in hp['rules']:
         print(rule_test)
 
-        n_rep = 1 # how often 12 trials from every task are drawn for model validation
+        n_rep = 5 # how often 12 trials from every task are drawn for model validation
 
         clsq_tmp = list()
         creg_tmp = list()
@@ -307,32 +292,31 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
               '| cost {:0.6f}'.format(np.mean(clsq_tmp)) +
               '| c_reg {:0.6f}'.format(np.mean(creg_tmp)) +
               '  | perf {:0.2f}'.format(np.mean(perf_tmp)))
-        print('Log: ', log)
         sys.stdout.flush()
 
 
-        # # TODO: This needs to be fixed since now rules are strings
-        # if hasattr(rule_train, '__iter__'):
-        #     rule_tmp = rule_train
-        # else:
-        #     rule_tmp = [rule_train]
-        # perf_tests_mean = np.mean([log['perf_'+r][-1] for r in rule_tmp])
-        # log['perf_avg'].append(perf_tests_mean)
-        #
-        # perf_tests_min = np.min([log['perf_'+r][-1] for r in rule_tmp])
-        # log['perf_min'].append(perf_tests_min)
+    # # TODO: This needs to be fixed since now rules are strings
+    # if hasattr(rule_train, '__iter__'):
+    #     rule_tmp = rule_train
+    # else:
+    #     rule_tmp = [rule_train]
+    # perf_tests_mean = np.mean([log['perf_'+r][-1] for r in rule_tmp])
+    # log['perf_avg'].append(perf_tests_mean)
+    #
+    # perf_tests_min = np.min([log['perf_'+r][-1] for r in rule_tmp])
+    # log['perf_min'].append(perf_tests_min)
 
-        # Saving the model
-        model.save()
-        save_log_BeRNN(log)
+    # Saving the model
+    model.save()
+    save_log_BeRNN(log)
 
-        # return log
+    return log
 
 
 ########################################################################################################################
 '''Network training'''
 ########################################################################################################################
-def train_BeRNN(model_dir, hp=None, display_step = 5, ruleset='BeRNN', rule_trains=None, rule_prob_map=None, seed=0, load_dir=None, trainables=None):
+def train_BeRNN(model_dir, hp=None, display_step = 50, ruleset='BeRNN', rule_trains=None, rule_prob_map=None, seed=0, load_dir=None, trainables=None):
     """Train the network.
 
     Args:
@@ -412,18 +396,13 @@ def train_BeRNN(model_dir, hp=None, display_step = 5, ruleset='BeRNN', rule_trai
         # Set trainable parameters
         if trainables is None or trainables == 'all':
             var_list = model.var_list  # train everything
-        elif trainables == 'input':
-            # train all nputs
-            var_list = [v for v in model.var_list
-                        if ('input' in v.name) and ('rnn' not in v.name)]
-        elif trainables == 'rule':
-            # train rule inputs only
-            var_list = [v for v in model.var_list if 'rule_input' in v.name]
         else:
             raise ValueError('Unknown trainables')
+        # actualizes the network optimization method and variable list (only important if that changes)
         model.set_optimizer(var_list=var_list)
 
         # penalty on deviation from initial weight
+        # iteratively reduces weight strength so that the model complexity is reduced - prevents overfitting
         if hp['l2_weight_init'] > 0:
             anchor_ws = sess.run(model.weight_list)
             for w, w_val in zip(model.weight_list, anchor_ws):
@@ -433,6 +412,7 @@ def train_BeRNN(model_dir, hp=None, display_step = 5, ruleset='BeRNN', rule_trai
             model.set_optimizer(var_list=var_list)
 
         # partial weight training
+        # laying weight mask with L2 regularization term over all trainable weights
         if ('p_weight_train' in hp and
                 (hp['p_weight_train'] is not None) and
                 hp['p_weight_train'] < 1.0):
@@ -453,14 +433,13 @@ def train_BeRNN(model_dir, hp=None, display_step = 5, ruleset='BeRNN', rule_trai
         for step in range(len(random_AllTasks_list)): # * hp['batch_size_train'] <= max_steps:
             currentBatch = random_AllTasks_list[step]
             print('Batch #',step)
-            print('Log: ',log)
             try:
                 # Validation
                 if step % display_step == 0:
                     log['trials'].append(step)
                     log['times'].append(time.time() - t_start)
                     log = do_eval_BeRNN(sess, model, log, hp['rule_trains'], AllTasks_list)
-                    print('Log after evaluation: ', log)
+                    print('VALIDATION ##########################################################################')
 
                 # Training
                 if currentBatch.split('_')[2] == 'DM':
@@ -484,16 +463,19 @@ def train_BeRNN(model_dir, hp=None, display_step = 5, ruleset='BeRNN', rule_trai
         print("Optimization finished!")
 
 # Apply the network training
-model_dir_BeRNN = os.getcwd() + '\\generalModel_BeRNN\\'
-train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=5, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
+model_dir_BeRNN = os.getcwd() + '\\generalModel_CSP\\'
+train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=50, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
 
 
 ########################################################################################################################
-'''LAB'''
+'''Network analysis'''
 ########################################################################################################################
-# model_dir_BeRNN = os.getcwd() + '\\generalModel_BeRNN\\'
-# model = Model(model_dir_BeRNN)
-# hp = model.hp
-#
-# with tf.Session() as sess:
-#     model.restore()
+from analysis import standard_analysis
+# Analysis functions
+
+
+
+model_dir = 'generalModel_CSP'
+rule = 'DM'
+standard_analysis.easy_activity_plot(model_dir, rule)
+
