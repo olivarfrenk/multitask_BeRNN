@@ -439,7 +439,7 @@ def train_BeRNN(model_dir, hp=None, display_step = 50, ruleset='BeRNN', rule_tra
                     log['trials'].append(step)
                     log['times'].append(time.time() - t_start)
                     log = do_eval_BeRNN(sess, model, log, hp['rule_trains'], AllTasks_list)
-                    print('VALIDATION ##########################################################################')
+                    print('TRAINING ##########################################################################')
 
                 # Training
                 if currentBatch.split('_')[2] == 'DM':
@@ -462,20 +462,77 @@ def train_BeRNN(model_dir, hp=None, display_step = 50, ruleset='BeRNN', rule_tra
         model.save()
         print("Optimization finished!")
 
-# Apply the network training
-model_dir_BeRNN = os.getcwd() + '\\generalModel_CSP\\'
-train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=50, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
+# # Apply the network training
+# model_dir_BeRNN = os.getcwd() + '\\generalModel_test\\'
+# train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=50, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
 
 
 ########################################################################################################################
 '''Network analysis'''
 ########################################################################################################################
-from analysis import standard_analysis
+# from analysis import standard_analysis
+import matplotlib.pyplot as plt
 # Analysis functions
 
+def easy_activity_plot_BeRNN(model_dir, rule):
+    """A simple plot of neural activity from one task.
+
+    Args:
+        model_dir: directory where model file is saved
+        rule: string, the rule to plot
+    """
+
+    model = Model(model_dir)
+    hp = model.hp
+
+    xlsxFolder = os.getcwd() + '\\Data CSP\\'
+    xlsxFolderList = os.listdir(os.getcwd() + '\\Data CSP\\')
+    AllTasks_list = fileDict(xlsxFolder, xlsxFolderList)
+    random_AllTasks_list = random.sample(AllTasks_list, len(AllTasks_list))
+
+    with tf.Session() as sess:
+        model.restore()
+
+        currentRule = ' '
+        while currentRule != rule:
+            currentBatch = random.sample(AllTasks_list, 1)[0]
+            if len(currentBatch.split('_')) == 6:
+                currentRule = currentBatch.split('_')[2] + ' ' + currentBatch.split('_')[3]
+            else:
+                currentRule = currentBatch.split('_')[2]
+
+        if currentBatch.split('_')[2] == 'DM':
+            Input, Output, y_loc = prepare_DM(currentBatch, 48, 60)  # co: cmask problem: (model, hp['loss_type'], currentBatch, 0, 48)
+        elif currentBatch.split('_')[2] == 'EF':
+            Input, Output, y_loc = prepare_EF(currentBatch, 48, 60)
+        elif currentBatch.split('_')[2] == 'RP':
+            Input, Output, y_loc = prepare_RP(currentBatch, 48, 60)
+        elif currentBatch.split('_')[2] == 'WM':
+            Input, Output, y_loc = prepare_WM(currentBatch, 48, 60)
 
 
-model_dir = 'generalModel_CSP'
+        feed_dict = gen_feed_dict_BeRNN(model, Input, Output, hp)
+        h, y_hat = sess.run([model.h, model.y_hat], feed_dict=feed_dict)
+        # All matrices have shape (n_time, n_condition, n_neuron)
+
+    # Take only the one example trial
+    i_trial = 0
+
+    for activity, title in zip([Input, h, y_hat],
+                               ['input', 'recurrent', 'output']):
+        plt.figure()
+        print(np.dtype(activity[1,i_trial,1]))
+        plt.imshow(activity[:,i_trial,:].T, aspect='auto', cmap='hot',      # np.uint8
+                   interpolation='none', origin='lower')
+        plt.title(title)
+        plt.colorbar()
+        plt.show()
+
+
+
+model_dir = os.getcwd() + '\\generalModel_BeRNN'
 rule = 'DM'
-standard_analysis.easy_activity_plot(model_dir, rule)
+easy_activity_plot_BeRNN(model_dir, rule)
+
+
 
