@@ -247,6 +247,7 @@ def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, f
                 Input[i][j][k] = np.float32(Input[i][j][k])
     # Also change dtype for entire array
     Input = Input.astype('float32')
+
     # Sanity check
     print('Input solved: ', df['Spreadsheet'][0], ' ', df['TimeLimit'][0])
 
@@ -310,6 +311,7 @@ def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, f
                 # Complete y_loc matrix
                 for k in range(numFixStepsAverage, TotalStepsAverage):
                     y_loc[k][j] = pref[nonZerosOutput[0]]
+
     # Change dtype of every element in matrix to float32 for later validation functions
     for i in range(0, Output.shape[0]):
         for j in range(0, Output.shape[1]):
@@ -325,9 +327,6 @@ def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, f
 
     # Create c_mask
     # c_mask = add_c_mask_BeRNN(Output.shape[0], Output.shape[1], n_output, loss_type, numFixStepsAverage, numRespStepsAverage)
-    # Input.astype(float)
-    # np.dtype(np.float32(unitRingOutput[30,30,30]))
-    # np.dtype(Output[i][j][0])
 
     return Input, Output, y_loc    #, c_mask
 
@@ -554,6 +553,14 @@ def prepare_EF(file_location, sequence_on, sequence_off):
                 currentFinalRow = np.concatenate((Input[i][j][0:1], unitRingMod1, unitRingMod2, Input[i][j][65:78]))
                 Input[i][j][0:78] = currentFinalRow
 
+    # Change dtype of every element in matrix to float32 for later validation functions
+    for i in range(0, Input.shape[0]):
+        for j in range(0, Input.shape[1]):
+            for k in range(0, Input.shape[2]):
+                Input[i][j][k] = np.float32(Input[i][j][k])
+    # Also change dtype for entire array
+    Input = Input.astype('float32')
+
     # Sanity check
     print('Input solved: ', df['Spreadsheet'][0], ' ', df['TimeLimit'][0])
 
@@ -618,6 +625,14 @@ def prepare_EF(file_location, sequence_on, sequence_off):
                 # Complete y_loc matrix
                 for k in range(numFixStepsAverage, TotalStepsAverage):
                     y_loc[k][j] = pref[nonZerosOutput[0]]
+
+    # Change dtype of every element in matrix to float32 for later validation functions
+    for i in range(0, Output.shape[0]):
+        for j in range(0, Output.shape[1]):
+            for k in range(0, Output.shape[2]):
+                Output[i][j][k] = np.float32(Output[i][j][k])
+    # Also change dtype for entire array
+    Output = Output.astype('float32')
 
     # Sanity check
     print('Output solved: ', df['Spreadsheet'][0], ' ', df['TimeLimit'][0])
@@ -835,6 +850,14 @@ def prepare_RP(file_location, sequence_on, sequence_off):
                 currentFinalRow = np.concatenate((Input[i][j][0:1], unitRingMod1, unitRingMod2, Input[i][j][65:78]))
                 Input[i][j][0:78] = currentFinalRow
 
+    # Change dtype of every element in matrix to float32 for later validation functions
+    for i in range(0, Input.shape[0]):
+        for j in range(0, Input.shape[1]):
+            for k in range(0, Input.shape[2]):
+                Input[i][j][k] = np.float32(Input[i][j][k])
+    # Also change dtype for entire array
+    Input = Input.astype('float32')
+
     # Sanity check
     print('Input solved: ', df['Spreadsheet'][0], ' ', df['TimeLimit'][0])
 
@@ -936,6 +959,14 @@ def prepare_RP(file_location, sequence_on, sequence_off):
                 # Complete y_loc matrix
                 for k in range(numFixStepsAverage, TotalStepsAverage):
                     y_loc[k][j] = pref[nonZerosOutput[0]]
+
+    # Change dtype of every element in matrix to float32 for later validation functions
+    for i in range(0, Output.shape[0]):
+        for j in range(0, Output.shape[1]):
+            for k in range(0, Output.shape[2]):
+                Output[i][j][k] = np.float32(Output[i][j][k])
+    # Also change dtype for entire array
+    Output = Output.astype('float32')
 
     # Sanity check
     print('Output solved: ', df['Spreadsheet'][0], ' ', df['TimeLimit'][0])
@@ -1183,6 +1214,14 @@ def prepare_WM(file_location, sequence_on, sequence_off):
                 currentFinalRow = np.concatenate((Input[i][j][0:1], unitRingMod1, unitRingMod2, Input[i][j][65:78]))
                 Input[i][j][0:78] = currentFinalRow
 
+    # Change dtype of every element in matrix to float32 for later validation functions
+    for i in range(0, Input.shape[0]):
+        for j in range(0, Input.shape[1]):
+            for k in range(0, Input.shape[2]):
+                Input[i][j][k] = np.float32(Input[i][j][k])
+    # Also change dtype for entire array
+    Input = Input.astype('float32')
+
     # Sanity check
     print('Input solved: ', df['Spreadsheet'][0], ' ', df['TimeLimit'][0])
 
@@ -1299,6 +1338,14 @@ def prepare_WM(file_location, sequence_on, sequence_off):
                 # Complete y_loc matrix
                 for k in range(numFixStepsAverage, TotalStepsAverage):
                     y_loc[k][j] = pref[nonZerosOutput[0]]
+
+    # Change dtype of every element in matrix to float32 for later validation functions
+    for i in range(0, Output.shape[0]):
+        for j in range(0, Output.shape[1]):
+            for k in range(0, Output.shape[2]):
+                Output[i][j][k] = np.float32(Output[i][j][k])
+    # Also change dtype for entire array
+    Output = Output.astype('float32')
 
     # Sanity check
     print('Output solved: ', df['Spreadsheet'][0], ' ', df['TimeLimit'][0])
