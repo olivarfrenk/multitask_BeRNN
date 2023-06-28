@@ -203,6 +203,32 @@ def save_log_BeRNN(log):
     with open(fname, 'w') as f:
         json.dump(log, f)
 
+def load_log_BeRNN(model_dir):
+    """Load the log file of model save_name"""
+    fname = os.path.join(model_dir, 'log.json')
+    if not os.path.isfile(fname):
+        return None
+
+    with open(fname, 'r') as f:
+        log = json.load(f)
+    return log
+
+def load_hp_BeRNN(model_dir):
+    """Load the hyper-parameter file of model save_name"""
+    fname = os.path.join(model_dir, 'hp.json')
+    if not os.path.isfile(fname):
+        fname = os.path.join(model_dir, 'hparams.json')  # backward compat
+        if not os.path.isfile(fname):
+            return None
+
+    with open(fname, 'r') as f:
+        hp = json.load(f)
+
+    # Use a different seed aftering loading,
+    # since loading is typically for analysis
+    hp['rng'] = np.random.RandomState(hp['seed']+1000)
+    return hp
+
 def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
     """Do evaluation.
 
@@ -473,6 +499,28 @@ def train_BeRNN(model_dir, hp=None, display_step = 50, ruleset='BeRNN', rule_tra
 # from analysis import standard_analysis
 import matplotlib.pyplot as plt
 # Analysis functions
+_rule_color = {
+    'reactgo': 'green',
+            'delaygo': 'olive',
+            'fdgo': 'forest green',
+            'reactanti': 'mustard',
+            'delayanti': 'tan',
+            'fdanti': 'brown',
+            'dm1': 'lavender',
+            'dm2': 'aqua',
+            'contextdm1': 'bright purple',
+            'contextdm2': 'green blue',
+            'multidm': 'blue',
+            'delaydm1': 'indigo',
+            'delaydm2': 'grey blue',
+            'contextdelaydm1': 'royal purple',
+            'contextdelaydm2': 'dark cyan',
+            'multidelaydm': 'royal blue',
+            'dmsgo': 'red',
+            'dmsnogo': 'rose',
+            'dmcgo': 'orange',
+            'dmcnogo': 'peach'
+            }
 
 def easy_activity_plot_BeRNN(model_dir, rule):
     """A simple plot of neural activity from one task.
@@ -528,11 +576,55 @@ def easy_activity_plot_BeRNN(model_dir, rule):
         plt.colorbar()
         plt.show()
 
+def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
+    # Plot Training Progress
+    log = load_log_BeRNN(model_dir)
+    hp = load_hp_BeRNN(model_dir)
+
+    trials = log['trials']
+
+    fs = 6 # fontsize
+    fig = plt.figure(figsize=(3.5,1.2))
+    ax = fig.add_axes([0.1,0.25,0.35,0.6])
+    lines = list()
+    labels = list()
+
+    x_plot = np.array(trials)/1000.
+    if rule_plot == None:
+        rule_plot = hp['rules']
+
+    for i, rule in enumerate(rule_plot):
+        # line = ax1.plot(x_plot, np.log10(cost_tests[rule]),color=color_rules[i%26])
+        # ax2.plot(x_plot, perf_tests[rule],color=color_rules[i%26])
+        line = ax.plot(x_plot, np.log10(log['cost_'+rule]),
+                       color=rule_color[rule])
+        ax.plot(x_plot, log['perf_'+rule], color=rule_color[rule])
+        lines.append(line[0])
+        labels.append(rule_name[rule])
+
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+
+    ax.set_ylim([0, 1])
+    ax.set_xlabel('Total trials (1,000)',fontsize=fs, labelpad=2)
+    ax.set_ylabel('Performance',fontsize=fs, labelpad=0)
+    ax.locator_params(axis='x', nbins=3)
+    ax.set_yticks([0,1])
+    ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
+    lg = fig.legend(lines, labels, title='Task',ncol=2,bbox_to_anchor=(0.47,0.5),
+                    fontsize=fs,labelspacing=0.3,loc=6,frameon=False)
+    plt.setp(lg.get_title(),fontsize=fs)
+    plt.savefig('figure/Performance_Progresss.pdf', transparent=True)
+    plt.show()
 
 
 model_dir = os.getcwd() + '\\generalModel_BeRNN'
 rule = 'DM'
 easy_activity_plot_BeRNN(model_dir, rule)
+plot_performanceprogress_BeRNN(model_dir)
 
+# performance visualization
 
 
