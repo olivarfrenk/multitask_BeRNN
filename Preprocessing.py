@@ -100,6 +100,9 @@ def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, f
     # TotalStepsAverage = numFixStepsAverage + numRespStepsAverage
 
     # todo: For bug fixing we will create equal sequence length for all sessions
+    # todo: We also have to think of which part of the sequence represents mostly the cognitive paradigm and not other
+    # todo confounding factors like reaction time etc.
+    # todo: That is also where we can apply c-mask to weight certain epochs in sequence differently
     numFixStepsAverage = 30
     numRespStepsAverage = 70
     TotalStepsAverage = numFixStepsAverage + numRespStepsAverage

@@ -13,6 +13,8 @@ import tensorflow as tf
 from network import Model
 from collections import defaultdict
 from Preprocessing import fileDict, prepare_DM, prepare_EF, prepare_RP, prepare_WM
+# Interactive mode for matplotlib will be activated which enables scientific computing (code batch execution)
+import matplotlib.pyplot as plt
 
 
 ########################################################################################################################
@@ -496,31 +498,23 @@ def train_BeRNN(model_dir, hp=None, display_step = 50, ruleset='BeRNN', rule_tra
 ########################################################################################################################
 '''Network analysis'''
 ########################################################################################################################
-# from analysis import standard_analysis
-import matplotlib.pyplot as plt
 # Analysis functions
 _rule_color = {
-    'reactgo': 'green',
-            'delaygo': 'olive',
-            'fdgo': 'forest green',
-            'reactanti': 'mustard',
-            'delayanti': 'tan',
-            'fdanti': 'brown',
-            'dm1': 'lavender',
-            'dm2': 'aqua',
-            'contextdm1': 'bright purple',
-            'contextdm2': 'green blue',
-            'multidm': 'blue',
-            'delaydm1': 'indigo',
-            'delaydm2': 'grey blue',
-            'contextdelaydm1': 'royal purple',
-            'contextdelaydm2': 'dark cyan',
-            'multidelaydm': 'royal blue',
-            'dmsgo': 'red',
-            'dmsnogo': 'rose',
-            'dmcgo': 'orange',
-            'dmcnogo': 'peach'
+            'DM': 'green',
+            'DM Anti': 'olive',
+            'EF': 'forest green',
+            'EF Anti': 'mustard',
+            'RP': 'tan',
+            'RP Anti': 'brown',
+            'RP Ctx1': 'lavender',
+            'RP Ctx2': 'aqua',
+            'WM': 'bright purple',
+            'WM Anti': 'green blue',
+            'WM Ctx1': 'blue',
+            'WM Ctx2': 'indigo'
             }
+
+rule_color = {k: 'xkcd:'+v for k, v in _rule_color.items()}
 
 def easy_activity_plot_BeRNN(model_dir, rule):
     """A simple plot of neural activity from one task.
@@ -564,12 +558,11 @@ def easy_activity_plot_BeRNN(model_dir, rule):
         # All matrices have shape (n_time, n_condition, n_neuron)
 
     # Take only the one example trial
-    i_trial = 0
+    i_trial = 10
 
     for activity, title in zip([Input, h, y_hat],
                                ['input', 'recurrent', 'output']):
         plt.figure()
-        print(np.dtype(activity[1,i_trial,1]))
         plt.imshow(activity[:,i_trial,:].T, aspect='auto', cmap='hot',      # np.uint8
                    interpolation='none', origin='lower')
         plt.title(title)
@@ -600,7 +593,7 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
                        color=rule_color[rule])
         ax.plot(x_plot, log['perf_'+rule], color=rule_color[rule])
         lines.append(line[0])
-        labels.append(rule_name[rule])
+        labels.append(rule)
 
     ax.tick_params(axis='both', which='major', labelsize=fs)
 
@@ -616,15 +609,13 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     lg = fig.legend(lines, labels, title='Task',ncol=2,bbox_to_anchor=(0.47,0.5),
                     fontsize=fs,labelspacing=0.3,loc=6,frameon=False)
     plt.setp(lg.get_title(),fontsize=fs)
-    plt.savefig('figure/Performance_Progresss.pdf', transparent=True)
     plt.show()
 
 
-model_dir = os.getcwd() + '\\generalModel_BeRNN'
+model_dir = os.getcwd() + '\\generalModel_CSP'
 rule = 'DM'
+# Plot activity of input, recurrent and output layer for one test trial
 easy_activity_plot_BeRNN(model_dir, rule)
+# Plot improvement of performance over iterating training steps
 plot_performanceprogress_BeRNN(model_dir)
-
-# performance visualization
-
 
