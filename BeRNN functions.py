@@ -266,7 +266,7 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
         rule_name_print = ' & '.join(rule_train)
 
     print('VALIDATION ##########################################################################')
-    print('Trial {:7d}'.format(log['trials'][-1]) +      # [-1] calls the last element of a list
+    print('Trial {:7d}'.format(log['trials'][-1] * 60) +      # [-1] calls the last element of a list
           '  | Time {:0.2f} s'.format(log['times'][-1]) +
           '  | Now training ' + rule_name_print)
 
@@ -457,7 +457,6 @@ def train_BeRNN(model_dir, hp=None, display_step = 50, ruleset='BeRNN', rule_tra
                 model.cost_reg += tf.nn.l2_loss((w - w_val) * w_mask)
             model.set_optimizer(var_list=var_list)
 
-
         for step in range(len(random_AllTasks_list)): # * hp['batch_size_train'] <= max_steps:
             currentBatch = random_AllTasks_list[step]
             print('Batch #',step)
@@ -490,13 +489,15 @@ def train_BeRNN(model_dir, hp=None, display_step = 50, ruleset='BeRNN', rule_tra
         model.save()
         print("Optimization finished!")
 
-# # Apply the network training
-# model_dir_BeRNN = os.getcwd() + '\\generalModel_test\\'
-# train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=50, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
+# Apply the network training
+# model_dir_BeRNN = os.getcwd() + '\\generalModel_BeRNN\\' # Very first model trained with all available CSP working group data
+model_dir_BeRNN = os.getcwd() + '\\test\\'
+train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=50, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
 
 
 ########################################################################################################################
 '''Network analysis'''
+
 ########################################################################################################################
 # Analysis functions
 _rule_color = {
@@ -612,8 +613,8 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     plt.show()
 
 
-model_dir = os.getcwd() + '\\generalModel_CSP'
-rule = 'DM'
+model_dir = os.getcwd() + '\\generalModel_BeRNN'
+rule = 'RP Ctx2'
 # Plot activity of input, recurrent and output layer for one test trial
 easy_activity_plot_BeRNN(model_dir, rule)
 # Plot improvement of performance over iterating training steps
