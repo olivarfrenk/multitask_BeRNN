@@ -614,7 +614,7 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
 
 
 model_dir = os.getcwd() + '\\generalModel_BeRNN'
-rule = 'RP Ctx2'
+rule = 'DM'
 # Plot activity of input, recurrent and output layer for one test trial
 easy_activity_plot_BeRNN(model_dir, rule)
 # Plot improvement of performance over iterating training steps

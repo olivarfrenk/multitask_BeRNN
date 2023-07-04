@@ -4,7 +4,7 @@
 import numpy as np
 import pandas as pd
 import os
-import random
+# import random
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
@@ -325,7 +325,6 @@ def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, f
 
         # Sanity check
     print('Output solved: ', df['Spreadsheet'][0], ' ', df['TimeLimit'][0])
-
 
 
     # Create c_mask
