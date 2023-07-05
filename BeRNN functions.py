@@ -457,33 +457,39 @@ def train_BeRNN(model_dir, hp=None, display_step = 50, ruleset='BeRNN', rule_tra
                 model.cost_reg += tf.nn.l2_loss((w - w_val) * w_mask)
             model.set_optimizer(var_list=var_list)
 
-        for step in range(len(random_AllTasks_list)): # * hp['batch_size_train'] <= max_steps:
-            currentBatch = random_AllTasks_list[step]
-            print('Batch #',step)
-            try:
-                # Validation
-                if step % display_step == 0:
-                    log['trials'].append(step)
-                    log['times'].append(time.time() - t_start)
-                    log = do_eval_BeRNN(sess, model, log, hp['rule_trains'], AllTasks_list)
-                    print('TRAINING ##########################################################################')
+        batchNumber = 0
+        # loop through all existing data 40 times
+        for i in range(40):
+            # loop through all existing data
+            for step in range(len(random_AllTasks_list)): # * hp['batch_size_train'] <= max_steps:
+                currentBatch = random_AllTasks_list[step]
+                try:
+                    # Validation
+                    if step % display_step == 0:
+                        log['trials'].append(batchNumber * 48)
+                        log['times'].append(time.time() - t_start)
+                        log = do_eval_BeRNN(sess, model, log, hp['rule_trains'], AllTasks_list)
+                        print('TRAINING ##########################################################################')
 
-                # Training
-                if currentBatch.split('_')[2] == 'DM':
-                    Input, Output, y_loc = prepare_DM(currentBatch, 0, 48) # co: cmask problem: (model, hp['loss_type'], currentBatch, 0, 48)
-                elif currentBatch.split('_')[2] == 'EF':
-                    Input, Output, y_loc = prepare_EF(currentBatch, 0, 48)
-                elif currentBatch.split('_')[2] == 'RP':
-                    Input, Output, y_loc = prepare_RP(currentBatch, 0, 48)
-                elif currentBatch.split('_')[2] == 'WM':
-                    Input, Output, y_loc = prepare_WM(currentBatch, 0, 48)
-                # Generating feed_dict.
-                feed_dict = gen_feed_dict_BeRNN(model, Input, Output, hp) # co: cmask problem: (model, Input, Output, c_mask, hp)
-                sess.run(model.train_step, feed_dict=feed_dict)
+                    # Count batches
+                    batchNumber += 1
+                    print('Batch #', batchNumber)
+                    # Training
+                    if currentBatch.split('_')[2] == 'DM':
+                        Input, Output, y_loc = prepare_DM(currentBatch, 0, 48) # co: cmask problem: (model, hp['loss_type'], currentBatch, 0, 48)
+                    elif currentBatch.split('_')[2] == 'EF':
+                        Input, Output, y_loc = prepare_EF(currentBatch, 0, 48)
+                    elif currentBatch.split('_')[2] == 'RP':
+                        Input, Output, y_loc = prepare_RP(currentBatch, 0, 48)
+                    elif currentBatch.split('_')[2] == 'WM':
+                        Input, Output, y_loc = prepare_WM(currentBatch, 0, 48)
+                    # Generating feed_dict.
+                    feed_dict = gen_feed_dict_BeRNN(model, Input, Output, hp) # co: cmask problem: (model, Input, Output, c_mask, hp)
+                    sess.run(model.train_step, feed_dict=feed_dict)
 
-            except BaseException as e:
-                print('error with: ' + currentBatch)
-                print('error message: ' + str(e))
+                except BaseException as e:
+                    print('error with: ' + currentBatch)
+                    print('error message: ' + str(e))
 
         # Saving the model
         model.save()
@@ -491,13 +497,12 @@ def train_BeRNN(model_dir, hp=None, display_step = 50, ruleset='BeRNN', rule_tra
 
 # Apply the network training
 # model_dir_BeRNN = os.getcwd() + '\\generalModel_BeRNN\\' # Very first model trained with all available CSP working group data
-model_dir_BeRNN = os.getcwd() + '\\test\\'
+model_dir_BeRNN = os.getcwd() + '\\BeRNN_models\\generalModel_CSP_4\\'
 train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=50, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
 
 
 ########################################################################################################################
 '''Network analysis'''
-
 ########################################################################################################################
 # Analysis functions
 _rule_color = {
@@ -613,7 +618,7 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     plt.show()
 
 
-model_dir = os.getcwd() + '\\generalModel_BeRNN'
+model_dir = os.getcwd() + '\\BeRNN_models\\generalModel_CSP_4'
 rule = 'DM'
 # Plot activity of input, recurrent and output layer for one test trial
 easy_activity_plot_BeRNN(model_dir, rule)
