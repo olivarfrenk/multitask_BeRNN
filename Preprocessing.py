@@ -26,7 +26,7 @@ def add_x_loc(x_loc, pref):
 # DM & DM Anti
 def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, file_location, sequence_on, sequence_off)
     # For bug fixing
-    file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_DM_easy_1100.xlsx', 0, 48
+    # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_DM_easy_1100.xlsx', 0, 48
     # Open .xlsx and select necessary columns
     df = pd.read_excel(file_location, engine='openpyxl')
     # Add all necessary columns to create the Yang form later

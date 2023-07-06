@@ -344,7 +344,7 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
 ########################################################################################################################
 '''Network training'''
 ########################################################################################################################
-def train_BeRNN(model_dir, hp=None, display_step = 50, ruleset='BeRNN', rule_trains=None, rule_prob_map=None, seed=0, load_dir=None, trainables=None):
+def train_BeRNN(model_dir, hp=None, display_step = 500, ruleset='BeRNN', rule_trains=None, rule_prob_map=None, seed=0, load_dir=None, trainables=None):
     """Train the network.
 
     Args:
@@ -458,15 +458,15 @@ def train_BeRNN(model_dir, hp=None, display_step = 50, ruleset='BeRNN', rule_tra
             model.set_optimizer(var_list=var_list)
 
         batchNumber = 0
-        # loop through all existing data 40 times
-        for i in range(40):
+        # loop through all existing data several times
+        for i in range(1):
             # loop through all existing data
             for step in range(len(random_AllTasks_list)): # * hp['batch_size_train'] <= max_steps:
                 currentBatch = random_AllTasks_list[step]
                 try:
                     # Validation
                     if step % display_step == 0:
-                        log['trials'].append(batchNumber * 48)
+                        log['trials'].append(batchNumber)   # Average trials per batch fed to network on one task (48/12)
                         log['times'].append(time.time() - t_start)
                         log = do_eval_BeRNN(sess, model, log, hp['rule_trains'], AllTasks_list)
                         print('TRAINING ##########################################################################')
@@ -497,7 +497,7 @@ def train_BeRNN(model_dir, hp=None, display_step = 50, ruleset='BeRNN', rule_tra
 
 # Apply the network training
 # model_dir_BeRNN = os.getcwd() + '\\generalModel_BeRNN\\' # Very first model trained with all available CSP working group data
-model_dir_BeRNN = os.getcwd() + '\\BeRNN_models\\generalModel_CSP_4\\'
+model_dir_BeRNN = os.getcwd() + '\\BeRNN_models\\generalModel_CSP_test\\'
 train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=50, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
 
 
@@ -580,7 +580,7 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     log = load_log_BeRNN(model_dir)
     hp = load_hp_BeRNN(model_dir)
 
-    trials = log['trials']
+    trials = log['trials']  # * 4 = averageTrialsPerTask
 
     fs = 6 # fontsize
     fig = plt.figure(figsize=(3.5,1.2))
@@ -588,7 +588,7 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     lines = list()
     labels = list()
 
-    x_plot = np.array(trials)/1000.
+    x_plot = np.array(trials)
     if rule_plot == None:
         rule_plot = hp['rules']
 
@@ -604,7 +604,7 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     ax.tick_params(axis='both', which='major', labelsize=fs)
 
     ax.set_ylim([0, 1])
-    ax.set_xlabel('Total trials (1,000)',fontsize=fs, labelpad=2)
+    ax.set_xlabel('Trials per task',fontsize=fs, labelpad=2)
     ax.set_ylabel('Performance',fontsize=fs, labelpad=0)
     ax.locator_params(axis='x', nbins=3)
     ax.set_yticks([0,1])
@@ -615,10 +615,23 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     lg = fig.legend(lines, labels, title='Task',ncol=2,bbox_to_anchor=(0.47,0.5),
                     fontsize=fs,labelspacing=0.3,loc=6,frameon=False)
     plt.setp(lg.get_title(),fontsize=fs)
+    # Add the randomness thresholds
+    # DM & RP Ctx
+    plt.axhline(y=0.2, color='green', label= 'DM & DM Anti & RP Ctx1 & RP Ctx2', linestyle=':')
+    # EF
+    plt.axhline(y=0.25, color='black', label= 'EF & EF Anti', linestyle=':')
+    # RP
+    plt.axhline(y=0.143, color='brown', label= 'RP & RP Anti', linestyle=':')
+    # WM
+    plt.axhline(y=0.5, color='blue', label= 'WM & WM Anti & WM Ctx1 & WM Ctx2', linestyle=':')
+
+    rt = fig.legend(title='Randomness threshold', bbox_to_anchor=(0.47, 0.4), fontsize=fs, labelspacing=0.3, loc=6, frameon=False)
+    plt.setp(rt.get_title(), fontsize=fs)
+
     plt.show()
 
 
-model_dir = os.getcwd() + '\\BeRNN_models\\generalModel_CSP_4'
+model_dir = os.getcwd() + '\\BeRNN_models\\generalModel_CSP_test'
 rule = 'DM'
 # Plot activity of input, recurrent and output layer for one test trial
 easy_activity_plot_BeRNN(model_dir, rule)
