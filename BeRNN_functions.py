@@ -2,7 +2,7 @@ import os
 import sys
 import json
 import time
-import errno
+# import errno
 import random
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -125,11 +125,11 @@ def mkdir_p_BeRNN(path):
     """
     try:
         os.makedirs(path)
-    except OSError as e:
-        if e.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
-            raise
+    # except OSError as e:
+    #     if e.errno == errno.EEXIST and os.path.isdir(path):
+    #         pass
+    #     else:
+    #         raise
 
 def gen_feed_dict_BeRNN(model, Input, Output, hp):
     """Generate feed_dict for session run."""
