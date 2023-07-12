@@ -11,3 +11,4 @@ dependencies:
 - os
 - json
 - openpyxl
+- matplotlip
