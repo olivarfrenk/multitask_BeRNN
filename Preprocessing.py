@@ -1359,7 +1359,7 @@ def prepare_WM(file_location, sequence_on, sequence_off):
 # co: Step 2: Create lists with files for preperation functions ########################################################
 ########################################################################################################################
 # General .xlsx list
-xlsxFolderList = os.listdir(os.getcwd() + '\\Data CSP\\')
+xlsxFolderList = os.listdir(os.getcwd() + '/Data CSP/')
 
 def fileDict(xlsxFolder, xlsxFolderList):
     # Create file dictionary

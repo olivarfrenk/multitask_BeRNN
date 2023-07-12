@@ -118,18 +118,18 @@ def save_hp_BeRNN(hp, model_dir):
     with open(os.path.join(model_dir, 'hp.json'), 'w') as f:
         json.dump(hp_copy, f)
 
-def mkdir_p_BeRNN(path):
-    """
-    Portable mkdir -p
-
-    """
-    try:
-        os.makedirs(path)
-    # except OSError as e:
-    #     if e.errno == errno.EEXIST and os.path.isdir(path):
-    #         pass
-    #     else:
-    #         raise
+# def mkdir_p_BeRNN(path):
+#     """
+#     Portable mkdir -p
+#
+#     """
+#     try:
+#         os.makedirs(path)
+#     # except OSError as e:
+#     #     if e.errno == errno.EEXIST and os.path.isdir(path):
+#     #         pass
+#     #     else:
+#     #         raise
 
 def gen_feed_dict_BeRNN(model, Input, Output, hp):
     """Generate feed_dict for session run."""
@@ -344,7 +344,7 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
 ########################################################################################################################
 '''Network training'''
 ########################################################################################################################
-def train_BeRNN(model_dir, hp=None, display_step = 500, ruleset='BeRNN', rule_trains=None, rule_prob_map=None, seed=0, load_dir=None, trainables=None):
+def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_trains=None, rule_prob_map=None, seed=0, load_dir=None, trainables=None):
     """Train the network.
 
     Args:
@@ -362,7 +362,7 @@ def train_BeRNN(model_dir, hp=None, display_step = 500, ruleset='BeRNN', rule_tr
         training configuration is stored at model_dir/hp.json
     """
 
-    mkdir_p_BeRNN(model_dir) # todo: create directory if not existing
+    # mkdir_p_BeRNN(model_dir) # todo: create directory if not existing
 
     # Network parameters
     default_hp = get_default_hp_BeRNN(ruleset)
@@ -409,8 +409,8 @@ def train_BeRNN(model_dir, hp=None, display_step = 500, ruleset='BeRNN', rule_tr
     t_start = time.time()
 
     # todo: Create taskList to generate trials from
-    xlsxFolder = os.getcwd() + '\\Data CSP\\'
-    xlsxFolderList = os.listdir(os.getcwd() + '\\Data CSP\\')
+    xlsxFolder = os.getcwd() + '/Data CSP/'
+    xlsxFolderList = os.listdir(os.getcwd() + '/Data CSP/')
     AllTasks_list = fileDict(xlsxFolder, xlsxFolderList)
     random_AllTasks_list = random.sample(AllTasks_list, len(AllTasks_list))
 
@@ -459,14 +459,14 @@ def train_BeRNN(model_dir, hp=None, display_step = 500, ruleset='BeRNN', rule_tr
 
         batchNumber = 0
         # loop through all existing data several times
-        for i in range(1):
+        for i in range(20):
             # loop through all existing data
             for step in range(len(random_AllTasks_list)): # * hp['batch_size_train'] <= max_steps:
                 currentBatch = random_AllTasks_list[step]
                 try:
                     # Validation
                     if step % display_step == 0:
-                        log['trials'].append(batchNumber)   # Average trials per batch fed to network on one task (48/12)
+                        log['trials'].append(batchNumber*4)   # Average trials per batch fed to network on one task (48/12)
                         log['times'].append(time.time() - t_start)
                         log = do_eval_BeRNN(sess, model, log, hp['rule_trains'], AllTasks_list)
                         print('TRAINING ##########################################################################')
@@ -497,8 +497,8 @@ def train_BeRNN(model_dir, hp=None, display_step = 500, ruleset='BeRNN', rule_tr
 
 # Apply the network training
 # model_dir_BeRNN = os.getcwd() + '\\generalModel_BeRNN\\' # Very first model trained with all available CSP working group data
-model_dir_BeRNN = os.getcwd() + '\\BeRNN_models\\generalModel_CSP_test\\'
-train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=50, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
+model_dir_BeRNN = os.getcwd() + '/BeRNN_models/generalModel_CSP_20/'
+train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=250, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
 
 
 ########################################################################################################################
@@ -580,7 +580,7 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     log = load_log_BeRNN(model_dir)
     hp = load_hp_BeRNN(model_dir)
 
-    trials = log['trials']  # * 4 = averageTrialsPerTask
+    trials = log['trials']  #
 
     fs = 6 # fontsize
     fig = plt.figure(figsize=(3.5,1.2))
@@ -631,10 +631,20 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     plt.show()
 
 
-model_dir = os.getcwd() + '\\BeRNN_models\\generalModel_CSP_test'
+model_dir = os.getcwd() + '/BeRNN_models/generalModel_CSP_20'
 rule = 'DM'
 # Plot activity of input, recurrent and output layer for one test trial
 easy_activity_plot_BeRNN(model_dir, rule)
 # Plot improvement of performance over iterating training steps
 plot_performanceprogress_BeRNN(model_dir)
 
+
+
+
+########################################################################################################################
+## LAB #################################################################################################################
+########################################################################################################################
+
+# todo: Preprocess and store data before training
+# todo: Allow different sequence lengths
+# todo: Create dataFrames for general and individual models
