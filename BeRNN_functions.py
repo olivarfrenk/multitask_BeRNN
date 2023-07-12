@@ -648,3 +648,4 @@ plot_performanceprogress_BeRNN(model_dir)
 # todo: Preprocess and store data before training
 # todo: Allow different sequence lengths
 # todo: Create dataFrames for general and individual models
+# todo: Add c-mask and do hyperparameter search
