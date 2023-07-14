@@ -459,7 +459,7 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
 
         batchNumber = 0
         # loop through all existing data several times
-        for i in range(20):
+        for i in range(1):
             # loop through all existing data
             for step in range(len(random_AllTasks_list)): # * hp['batch_size_train'] <= max_steps:
                 currentBatch = random_AllTasks_list[step]
@@ -497,7 +497,7 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
 
 # Apply the network training
 # model_dir_BeRNN = os.getcwd() + '\\generalModel_BeRNN\\' # Very first model trained with all available CSP working group data
-model_dir_BeRNN = os.getcwd() + '/BeRNN_models/generalModel_CSP_20/'
+model_dir_BeRNN = os.getcwd() + '/BeRNN_models/generalModel_CSP_test/'
 train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=250, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
 
 
@@ -631,13 +631,12 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     plt.show()
 
 
-model_dir = os.getcwd() + '/BeRNN_models/generalModel_CSP_20'
+model_dir = os.getcwd() + '/BeRNN_models/generalModel_CSP_40_pan'
 rule = 'DM'
 # Plot activity of input, recurrent and output layer for one test trial
 easy_activity_plot_BeRNN(model_dir, rule)
 # Plot improvement of performance over iterating training steps
 plot_performanceprogress_BeRNN(model_dir)
-
 
 
 

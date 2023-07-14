@@ -1,0 +1,2 @@
+model_checkpoint_path: "/pandora/home/oliver.frank/Desktop/multitask_BeRNN/BeRNN_models/generalModel_CSP_40/model.ckpt"
+all_model_checkpoint_paths: "/pandora/home/oliver.frank/Desktop/multitask_BeRNN/BeRNN_models/generalModel_CSP_40/model.ckpt"

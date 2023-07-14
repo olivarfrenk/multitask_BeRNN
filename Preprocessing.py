@@ -135,7 +135,7 @@ def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, f
     # Create final output form
     Output = np.delete(Output, np.s_[0, 1, 2, 4, 5, 6, 7], axis=2)
     Output = np.delete(Output, np.s_[34:78], axis=2)
-    # Delet all rows that are not needed (for either training or testing)
+    # Delete all rows that are not needed (for either training or testing)
     Input = Input[:, sequence_on:sequence_off, :]
     Output = Output[:, sequence_on:sequence_off, :]
 
@@ -335,7 +335,7 @@ def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, f
 # EF & EF Anti
 def prepare_EF(file_location, sequence_on, sequence_off):
     # For bug fixing
-    # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_EF_normal_1100.xlsx', 0, 48
+    file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_EF_normal_1100.xlsx', 0, 48
     # Open .xlsx and select necessary columns
     df = pd.read_excel(file_location, engine='openpyxl')
     # Add all necessary columns to create the Yang form later
