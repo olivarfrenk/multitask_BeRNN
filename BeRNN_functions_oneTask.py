@@ -20,9 +20,8 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 '''TOOLS'''
 ########################################################################################################################
-rules_dict = \
-    {'BeRNN' :  ['DM', 'DM Anti', 'EF', 'EF Anti', 'RP', 'RP Anti', 'RP Ctx1',
-                         'RP Ctx2', 'WM', 'WM Anti', 'WM Ctx1', 'WM Ctx2']}
+rule_dict = \
+    {'BeRNN' :  ['WM']}
 
 def get_num_ring_BeRNN(ruleset):
     '''get number of stimulus rings'''
@@ -271,7 +270,6 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
           '  | Now training ' + rule_name_print)
 
     for rule_test in hp['rules']:
-        print(rule_test)
 
         n_rep = 5 # how often 12 trials from every task are drawn for model validation
 
@@ -344,7 +342,9 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
 ########################################################################################################################
 '''Network training'''
 ########################################################################################################################
-def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_trains=None, rule_prob_map=None, seed=0, load_dir=None, trainables=None):
+
+# co: ONE TASK #########################################################################################################
+def train_BeRNN_oneTask(model_dir, hp=None, display_step = 5, ruleset='BeRNN', rule_trains=None, rule_prob_map=None, seed=0, load_dir=None, trainables=None):
     """Train the network.
 
     Args:
@@ -375,7 +375,7 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
     # Rules to train and test. Rules in a set are trained together
     if rule_trains is None:
         # By default, training all rules available to this ruleset
-        hp['rule_trains'] = rules_dict[ruleset]
+        hp['rule_trains'] = rule_dict[ruleset]
     else:
         hp['rule_trains'] = rule_trains
     hp['rules'] = hp['rule_trains']
@@ -413,6 +413,22 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
     xlsxFolderList = os.listdir(os.getcwd() + '/Data CSP/')
     AllTasks_list = fileDict(xlsxFolder, xlsxFolderList)
     random_AllTasks_list = random.sample(AllTasks_list, len(AllTasks_list))
+
+    WM_list = []
+    WM_Anti_list = []
+    WM_Ctx1_list = []
+    WM_Ctx2_list = []
+
+    for i in random_AllTasks_list:
+        print(i.split('_')[2], i.split('_')[3])
+        if i.split('_')[2] == 'WM' and i.split('_')[3] != 'Anti' and i.split('_')[3] != 'Ctx1' and i.split('_')[3] != 'Ctx2':
+            WM_list.append(i)
+        elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Anti':
+            WM_Anti_list.append(i)
+        elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Ctx1':
+            WM_Ctx1_list.append(i)
+        elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Ctx2':
+            WM_Ctx2_list.append(i)
 
     with tf.Session() as sess:
         if load_dir is not None:
@@ -459,16 +475,16 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
 
         batchNumber = 0
         # loop through all existing data several times
-        for i in range(1):
+        for i in range(50):
             # loop through all existing data
-            for step in range(len(random_AllTasks_list)): # * hp['batch_size_train'] <= max_steps:
-                currentBatch = random_AllTasks_list[step]
+            for step in range(len(WM_list)): # * hp['batch_size_train'] <= max_steps:
+                currentBatch = WM_list[step]
                 try:
                     # Validation
                     if step % display_step == 0:
                         log['trials'].append(batchNumber*4)   # Average trials per batch fed to network on one task (48/12)
                         log['times'].append(time.time() - t_start)
-                        log = do_eval_BeRNN(sess, model, log, hp['rule_trains'], AllTasks_list)
+                        log = do_eval_BeRNN(sess, model, log, hp['rule_trains'], WM_list)
                         print('TRAINING ##########################################################################')
 
                     # Count batches
@@ -496,10 +512,8 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
         print("Optimization finished!")
 
 # Apply the network training
-# model_dir_BeRNN = os.getcwd() + '\\generalModel_BeRNN\\' # Very first model trained with all available CSP working group data
-model_dir_BeRNN = os.getcwd() + '/BeRNN_models/generalModel_CSP_test/'
-train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=250, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
-
+model_dir_BeRNN = os.getcwd() + '/BeRNN_models/generalModel_CSP_20_WM_pan/'
+train_BeRNN_oneTask(model_dir=model_dir_BeRNN, seed=0, display_step=5, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
 
 ########################################################################################################################
 '''Network analysis'''
@@ -631,7 +645,7 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     plt.show()
 
 
-model_dir = os.getcwd() + '/BeRNN_models/generalModel_CSP_40_pan'
+model_dir = os.getcwd() + '/BeRNN_models/generalModel_CSP_20_WM_pan'
 rule = 'DM'
 # Plot activity of input, recurrent and output layer for one test trial
 easy_activity_plot_BeRNN(model_dir, rule)
@@ -639,12 +653,3 @@ easy_activity_plot_BeRNN(model_dir, rule)
 plot_performanceprogress_BeRNN(model_dir)
 
 
-
-########################################################################################################################
-## LAB #################################################################################################################
-########################################################################################################################
-
-# todo: Preprocess and store data before training
-# todo: Allow different sequence lengths
-# todo: Create dataFrames for general and individual models
-# todo: Add c-mask and do hyperparameter search
