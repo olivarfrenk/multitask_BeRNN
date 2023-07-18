@@ -29,7 +29,7 @@ def get_num_ring_BeRNN(ruleset):
 
 def get_num_rule_BeRNN(ruleset):
     '''get number of rules'''
-    return len(rules_dict[ruleset])
+    return len(rule_dict[ruleset])
 
 def get_default_hp_BeRNN(ruleset):
     '''Get a default hp.
@@ -482,7 +482,7 @@ def train_BeRNN_oneTask(model_dir, hp=None, display_step = 5, ruleset='BeRNN', r
                 try:
                     # Validation
                     if step % display_step == 0:
-                        log['trials'].append(batchNumber*4)   # Average trials per batch fed to network on one task (48/12)
+                        log['trials'].append(batchNumber*48)   # Average trials per batch fed to network on one task (48/12)
                         log['times'].append(time.time() - t_start)
                         log = do_eval_BeRNN(sess, model, log, hp['rule_trains'], WM_list)
                         print('TRAINING ##########################################################################')
