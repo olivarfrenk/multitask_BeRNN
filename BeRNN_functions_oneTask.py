@@ -29,7 +29,8 @@ def get_num_ring_BeRNN(ruleset):
 
 def get_num_rule_BeRNN(ruleset):
     '''get number of rules'''
-    return len(rule_dict[ruleset])
+    # return len(rule_dict[ruleset])
+    return 12
 
 def get_default_hp_BeRNN(ruleset):
     '''Get a default hp.
@@ -344,7 +345,7 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
 ########################################################################################################################
 
 # co: ONE TASK #########################################################################################################
-def train_BeRNN_oneTask(model_dir, hp=None, display_step = 5, ruleset='BeRNN', rule_trains=None, rule_prob_map=None, seed=0, load_dir=None, trainables=None):
+def train_BeRNN_oneTask(model_dir, hp=None, display_step = 45, ruleset='BeRNN', rule_trains=None, rule_prob_map=None, seed=0, load_dir=None, trainables=None):
     """Train the network.
 
     Args:
@@ -420,15 +421,19 @@ def train_BeRNN_oneTask(model_dir, hp=None, display_step = 5, ruleset='BeRNN', r
     WM_Ctx2_list = []
 
     for i in random_AllTasks_list:
-        print(i.split('_')[2], i.split('_')[3])
-        if i.split('_')[2] == 'WM' and i.split('_')[3] != 'Anti' and i.split('_')[3] != 'Ctx1' and i.split('_')[3] != 'Ctx2':
-            WM_list.append(i)
-        elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Anti':
-            WM_Anti_list.append(i)
-        elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Ctx1':
-            WM_Ctx1_list.append(i)
-        elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Ctx2':
-            WM_Ctx2_list.append(i)
+        if i.split('/')[2] == 'MH':     # 7 on pandora
+            if i.split('_')[2] == 'WM' and i.split('_')[3] != 'Anti' and i.split('_')[3] != 'Ctx1' and i.split('_')[3] != 'Ctx2':
+                WM_list.append(i)
+                WM_list.append(i)
+                WM_list.append(i)
+                WM_list.append(i)
+                WM_list.append(i)
+            elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Anti':
+                WM_Anti_list.append(i)
+            elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Ctx1':
+                WM_Ctx1_list.append(i)
+            elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Ctx2':
+                WM_Ctx2_list.append(i)
 
     with tf.Session() as sess:
         if load_dir is not None:
@@ -475,7 +480,7 @@ def train_BeRNN_oneTask(model_dir, hp=None, display_step = 5, ruleset='BeRNN', r
 
         batchNumber = 0
         # loop through all existing data several times
-        for i in range(50):
+        for i in range(200):
             # loop through all existing data
             for step in range(len(WM_list)): # * hp['batch_size_train'] <= max_steps:
                 currentBatch = WM_list[step]
@@ -512,8 +517,9 @@ def train_BeRNN_oneTask(model_dir, hp=None, display_step = 5, ruleset='BeRNN', r
         print("Optimization finished!")
 
 # Apply the network training
-model_dir_BeRNN = os.getcwd() + '/BeRNN_models/generalModel_CSP_20_WM_pan/'
-train_BeRNN_oneTask(model_dir=model_dir_BeRNN, seed=0, display_step=5, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
+model_dir_BeRNN = os.getcwd() + '/BeRNN_models/generalModel_CSP_200_WM_pan/'
+train_BeRNN_oneTask(model_dir=model_dir_BeRNN, seed=0, display_step=45, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
+
 
 ########################################################################################################################
 '''Network analysis'''
@@ -645,11 +651,10 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     plt.show()
 
 
-model_dir = os.getcwd() + '/BeRNN_models/generalModel_CSP_20_WM_pan'
+model_dir = os.getcwd() + '/BeRNN_models/generalModel_CSP_50_pan'
+model_dir = os.getcwd() + '/BeRNN_models/MH_CSP_20_WM_pan'
 rule = 'DM'
 # Plot activity of input, recurrent and output layer for one test trial
 easy_activity_plot_BeRNN(model_dir, rule)
 # Plot improvement of performance over iterating training steps
 plot_performanceprogress_BeRNN(model_dir)
-
-

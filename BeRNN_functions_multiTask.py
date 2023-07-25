@@ -632,7 +632,7 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     plt.show()
 
 
-model_dir = os.getcwd() + '/BeRNN_models/generalModel_CSP_50_pan'
+model_dir = os.getcwd() + '/BeRNN_models/generalModel_CSP_200_pan'
 rule = 'DM'
 # Plot activity of input, recurrent and output layer for one test trial
 easy_activity_plot_BeRNN(model_dir, rule)
