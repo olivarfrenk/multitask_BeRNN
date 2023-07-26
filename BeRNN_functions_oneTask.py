@@ -12,7 +12,8 @@ import tensorflow as tf
 
 from network import Model
 from collections import defaultdict
-from Preprocessing import fileDict, prepare_DM, prepare_EF, prepare_RP, prepare_WM
+from Preprocessing import prepare_DM, prepare_EF, prepare_RP #, prepare_WM, fileDict
+from Preprocessing_acc import prepare_WM, fileDict
 # Interactive mode for matplotlib will be activated which enables scientific computing (code batch execution)
 import matplotlib.pyplot as plt
 
@@ -480,7 +481,7 @@ def train_BeRNN_oneTask(model_dir, hp=None, display_step = 45, ruleset='BeRNN', 
 
         batchNumber = 0
         # loop through all existing data several times
-        for i in range(200):
+        for i in range(10):
             # loop through all existing data
             for step in range(len(WM_list)): # * hp['batch_size_train'] <= max_steps:
                 currentBatch = WM_list[step]
@@ -517,7 +518,7 @@ def train_BeRNN_oneTask(model_dir, hp=None, display_step = 45, ruleset='BeRNN', 
         print("Optimization finished!")
 
 # Apply the network training
-model_dir_BeRNN = os.getcwd() + '/BeRNN_models/generalModel_CSP_200_WM_pan/'
+model_dir_BeRNN = os.getcwd() + '/BeRNN_models/generalModel_CSP_10_WM_acc/'
 train_BeRNN_oneTask(model_dir=model_dir_BeRNN, seed=0, display_step=45, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
 
 
@@ -651,9 +652,8 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     plt.show()
 
 
-model_dir = os.getcwd() + '/BeRNN_models/generalModel_CSP_50_pan'
-model_dir = os.getcwd() + '/BeRNN_models/MH_CSP_20_WM_pan'
-rule = 'DM'
+model_dir = os.getcwd() + '/BeRNN_models/generalModel_CSP_10_WM_acc'
+rule = 'WM'
 # Plot activity of input, recurrent and output layer for one test trial
 easy_activity_plot_BeRNN(model_dir, rule)
 # Plot improvement of performance over iterating training steps
