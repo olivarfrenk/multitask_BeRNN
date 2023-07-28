@@ -335,7 +335,7 @@ def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, f
 # EF & EF Anti
 def prepare_EF(file_location, sequence_on, sequence_off):
     # For bug fixing
-    file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_EF_normal_1100.xlsx', 0, 48
+    # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_EF_normal_1100.xlsx', 0, 48
     # Open .xlsx and select necessary columns
     df = pd.read_excel(file_location, engine='openpyxl')
     # Add all necessary columns to create the Yang form later
@@ -616,7 +616,7 @@ def prepare_EF(file_location, sequence_on, sequence_off):
             for k in range(0, numFixStepsAverage):
                 y_loc[k][j] = float(-1)
 
-            if len(nonZerosOutput) != 0 and currentTimeStepOutput[0] != 0.05:
+            if len(nonZerosOutput) == 1:
                 # Get activity and model gradient activation around it
                 currentOutputLoc = pref[nonZerosOutput[0]]
                 currentActivation_Output = add_x_loc(currentOutputLoc, pref) + 0.05 # adding noise
@@ -644,7 +644,7 @@ def prepare_EF(file_location, sequence_on, sequence_off):
 # RP & RP Anti & RP Ctx1 & RP Ctx2
 def prepare_RP(file_location, sequence_on, sequence_off):
     # For bug fixing
-    file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_RP_Anti_easy_1100.xlsx', 0, 48
+    # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_RP_Anti_easy_1100.xlsx', 0, 48
     # Open .xlsx and select necessary columns
     # print(file_location)
     df = pd.read_excel(file_location, engine='openpyxl')
@@ -945,12 +945,11 @@ def prepare_RP(file_location, sequence_on, sequence_off):
             unitRingOutput = np.zeros(32, dtype='float32')
             # Get non-zero values of time steps
             nonZerosOutput = np.nonzero(currentTimeStepOutput)[0]
-
             # Float first fixations rows with -1 for validation matrix y-loc
             for k in range(0, numFixStepsAverage):
                 y_loc[k][j] = np.float32(-1)
 
-            if len(nonZerosOutput) != 0 and currentTimeStepOutput[0] != 0.05:
+            if len(nonZerosOutput) == 1:
                 # Get activity and model gradient activation around it
                 currentOutputLoc = pref[nonZerosOutput[0]]
                 currentActivation_Output = add_x_loc(currentOutputLoc, pref) + 0.05 # adding noise
@@ -978,7 +977,7 @@ def prepare_RP(file_location, sequence_on, sequence_off):
 # WM & WM Anti & WM Ctx1 & WM Ctx2
 def prepare_WM(file_location, sequence_on, sequence_off):
     # For bug fixing
-    file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\SC\\7962396_WM_hard_1100.xlsx', 0, 48
+    # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\SC\\7962396_WM_hard_1100.xlsx', 1, 48
     # Open .xlsx and select necessary columns
     # print(file_location)
     df = pd.read_excel(file_location, engine='openpyxl')
@@ -1022,33 +1021,33 @@ def prepare_WM(file_location, sequence_on, sequence_off):
 
     # Get average epoch time steps for the selected task in one session
     finalTrialsList = []
-    numFixStepsTotal = 0
-    numStimStepsTotal = 0
-    numDelayStepsTotal = 0
-    numRespStepsTotal = 0
-    iterationSteps = 1
-    for i in incrementList:
-        if iterationSteps == len(incrementList):
-            break
-        currentTrial = df_selection[i:i+2].reset_index().drop(columns=['index'])
-        consecutiveTrial = df_selection[incrementList[iterationSteps]:incrementList[iterationSteps]+2].reset_index().drop(columns=['index'])
-        iterationSteps += 1
+    # numFixStepsTotal = 0
+    # numStimStepsTotal = 0
+    # numDelayStepsTotal = 0
+    # numRespStepsTotal = 0
+    # iterationSteps = 1
+    # for i in incrementList:
+    #     if iterationSteps == len(incrementList):
+    #         break
+    #     currentTrial = df_selection[i:i+2].reset_index().drop(columns=['index'])
+    #     consecutiveTrial = df_selection[incrementList[iterationSteps]:incrementList[iterationSteps]+2].reset_index().drop(columns=['index'])
+    #     iterationSteps += 1
 
 
-        ################################################################################################################
-        # todo: Fixation Cross 1
-        numFixSteps = round(currentTrial['Onset Time'][0]/20) # equal to neuronal time constant of 20ms (Yang, 2019)
-        numFixStepsTotal = numFixStepsTotal + numFixSteps
-        # todo: Stim presentation 1
-        numStimSteps = round(currentTrial['Onset Time'][1]/20)  # equal to neuronal time constant of 20ms (Yang, 2019)
-        numStimStepsTotal = numStimStepsTotal + numStimSteps
-        # todo: Delay 1 = Fixation Cross 2
-        numDelaySteps = round(consecutiveTrial['Onset Time'][0]/20)  # equal to neuronal time constant of 20ms (Yang, 2019)
-        numDelayStepsTotal = numDelayStepsTotal + numDelaySteps
-        # todo: Response 1 = Stim presentation 2
-        numRespSteps = round(consecutiveTrial['Onset Time'][1]/20)  # equal to neuronal time constant of 20ms (Yang, 2019)
-        numRespStepsTotal = numRespStepsTotal + numRespSteps
-        ################################################################################################################
+        # ################################################################################################################
+        # # todo: Fixation Cross 1
+        # numFixSteps = round(currentTrial['Onset Time'][0]/20) # equal to neuronal time constant of 20ms (Yang, 2019)
+        # numFixStepsTotal = numFixStepsTotal + numFixSteps
+        # # todo: Stim presentation 1
+        # numStimSteps = round(currentTrial['Onset Time'][1]/20)  # equal to neuronal time constant of 20ms (Yang, 2019)
+        # numStimStepsTotal = numStimStepsTotal + numStimSteps
+        # # todo: Delay 1 = Fixation Cross 2
+        # numDelaySteps = round(consecutiveTrial['Onset Time'][0]/20)  # equal to neuronal time constant of 20ms (Yang, 2019)
+        # numDelayStepsTotal = numDelayStepsTotal + numDelaySteps
+        # # todo: Response 1 = Stim presentation 2
+        # numRespSteps = round(consecutiveTrial['Onset Time'][1]/20)  # equal to neuronal time constant of 20ms (Yang, 2019)
+        # numRespStepsTotal = numRespStepsTotal + numRespSteps
+        # ################################################################################################################
 
 
     # numFixStepsAverage = round(numFixStepsTotal/iterationSteps)
@@ -1059,10 +1058,9 @@ def prepare_WM(file_location, sequence_on, sequence_off):
 
     # todo: For bug fixing we will create equal sequence length for all sessions
     numFixStepsAverage = 20
-    numStimStepsAverage = 40
+    numStimStepsAverage = 60
     numDelayStepsAverage = 20
-    numRespStepsAverage = 20
-    TotalStepsAverage = numFixStepsAverage + numStimStepsAverage + numDelayStepsAverage + numRespStepsAverage
+    TotalStepsAverage = numFixStepsAverage + numStimStepsAverage + numDelayStepsAverage
 
     # Take all trials and high-sample them to the average steps
     incrementSteps = 1
@@ -1070,17 +1068,13 @@ def prepare_WM(file_location, sequence_on, sequence_off):
         if incrementSteps == len(incrementList):
             break
         currentTrial = df_selection[i+1:i+2].reset_index().drop(columns=['index'])
-        consecutiveTrial = df_selection[incrementList[incrementSteps]+1:incrementList[incrementSteps]+2].reset_index().drop(columns=['index'])
+        # consecutiveTrial = df_selection[incrementList[incrementSteps]+1:incrementList[incrementSteps]+2].reset_index().drop(columns=['index'])
         incrementSteps += 1
 
         # Create List with high-sampled rows for first 2 epochs
         currentSequenceList = []
-        for j in range(0, numFixStepsAverage+numStimStepsAverage):
+        for j in range(0, TotalStepsAverage):
             sequence = [currentTrial.iloc[0]]
-            currentSequenceList.append(sequence)
-        # And for second 2 epochs
-        for k in range(0, numDelayStepsAverage+numRespStepsAverage):
-            sequence = [consecutiveTrial.iloc[0]]
             currentSequenceList.append(sequence)
         # Append current trial to final list - corresponds to one batch/ one task in one session
         finalTrialsList.append(currentSequenceList)
@@ -1108,15 +1102,20 @@ def prepare_WM(file_location, sequence_on, sequence_off):
     Output = Output[:, sequence_on:sequence_off, :]
 
     # INPUT ############################################################################################################
-    # float all fixation input values to 1
-    for i in range(0,Input.shape[0]):
+    # float all fixation input values to 1 until delay epoch
+    for i in range(0,numFixStepsAverage+numStimStepsAverage):
         for j in range(0,Input.shape[1]):
             Input[i][j][0] = np.float32(1)
+    # float all fixation input values to 0 in delay epoch
+    for i in range(numFixStepsAverage + numStimStepsAverage, TotalStepsAverage):
+        for j in range(0, Input.shape[1]):
+            Input[i][j][0] = np.float32(0)
     # float all task values to 0
     for i in range(0,Input.shape[0]):
         for j in range(0,Input.shape[1]):
             for k in range(65,Input.shape[2]):
                 Input[i][j][k] = np.float32(0)
+
     # Float current task value to 1
     taskDict = {
       'DM ': 65,
@@ -1142,7 +1141,11 @@ def prepare_WM(file_location, sequence_on, sequence_off):
             for k in range(1,65):
                 if Input[i][j][k] == 'NaN.png' or pd.isna(Input[i][j][k]):
                     Input[i][j][k] = np.float32(0)
+
     # float all values on mod1 fields to their true value
+    # co: We can increase the strength to maybe make it more easy for the network to distinguish between the different
+    #  information encoded through activity strength (for mod1 and mod2);
+    #  also the decrease if stimuli will lead to the option of having greater distances between the decoded strenghts
     mod1Dict = {
       '60_0': 0.08,
       '60_1': 0.17,
@@ -1162,6 +1165,7 @@ def prepare_WM(file_location, sequence_on, sequence_off):
             for k in range(1,33):
                 if Input[i][j][k] != 0:
                     Input[i][j][k] = mod1Dict[Input[i][j][k].split('w')[0]]
+
     # float all values on mod2 fields to their true value
     mod2Dict = {
       '0_25.png': np.float32(0.25),
@@ -1180,15 +1184,19 @@ def prepare_WM(file_location, sequence_on, sequence_off):
         for j in range(0,Input.shape[1]):
             for k in range(1,65):
                     Input[i][j][k] = np.float32(0)
-
+    # float all field values of delay period to 0
+    for i in range(numFixStepsAverage + numStimStepsAverage, TotalStepsAverage):
+        for j in range(0, Input.shape[1]):
+            for k in range(1, 65):
+                Input[i][j][k] = np.float32(0)
 
     # Add input gradient activation
     # Create default hyperparameters for network
     num_ring, n_eachring, n_rule = 2, 32, 12
-    n_input, n_output = 1 + num_ring * n_eachring + n_rule, n_eachring + 1
+    # n_input, n_output = 1 + num_ring * n_eachring + n_rule, n_eachring + 1
     pref = np.arange(0, 2 * np.pi, 2 * np.pi / 32)
 
-    for i in range(0, Input.shape[0]):
+    for i in range(0,Input.shape[0]):
         for j in range(0,Input.shape[1]):
             currentTimeStepModOne = Input[i][j][1:33]
             currentTimeStepModTwo = Input[i][j][33:65]
@@ -1234,12 +1242,12 @@ def prepare_WM(file_location, sequence_on, sequence_off):
             for k in range(3, 35):
                 Output[i][j][k] = np.float32(0.05)
     # float all field units of response epoch to 0
-    for i in range(numFixStepsAverage+numStimStepsAverage+numDelayStepsAverage,TotalStepsAverage):
+    for i in range(numFixStepsAverage+numStimStepsAverage, TotalStepsAverage):
         for j in range(0,Output.shape[1]):
             for k in range(3, 35):
                 Output[i][j][k] = np.float32(0)
     # float all fixation outputs during response period to 0.05
-    for i in range(numFixStepsAverage+numStimStepsAverage+numDelayStepsAverage,TotalStepsAverage):
+    for i in range(numFixStepsAverage+numStimStepsAverage, TotalStepsAverage):
         for j in range(0,Output.shape[1]):
                 Output[i][j][2] = np.float32(0.05)
 
@@ -1291,7 +1299,7 @@ def prepare_WM(file_location, sequence_on, sequence_off):
     }
 
 
-    for i in range(numFixStepsAverage+numStimStepsAverage+numDelayStepsAverage,TotalStepsAverage):
+    for i in range(numFixStepsAverage+numStimStepsAverage, TotalStepsAverage):
         for j in range(0,Output.shape[1]):
             if isinstance(Output[i][j][35], str):
                 # Get the right dictionary
@@ -1314,7 +1322,7 @@ def prepare_WM(file_location, sequence_on, sequence_off):
     # Drop unnecessary columns
     Output = np.delete(Output,[0,1,35],axis = 2)
     # Pre-allocate y-loc matrix; needed for later validation
-    y_loc = np.zeros((Output.shape[0], Output.shape[1]), dtype = 'float32')
+    y_loc = np.zeros((Output.shape[0], Output.shape[1]))
 
     # Add output gradient activation
     for i in range(0, Output.shape[0]):
@@ -1324,12 +1332,11 @@ def prepare_WM(file_location, sequence_on, sequence_off):
             unitRingOutput = np.zeros(32, dtype='float32')
             # Get non-zero values of time steps
             nonZerosOutput = np.nonzero(currentTimeStepOutput)[0]
-
             # Float first fixations rows with -1 for validation matrix y-loc
             for k in range(0, numFixStepsAverage):
                 y_loc[k][j] = np.float32(-1)
 
-            if len(nonZerosOutput) != 0 and currentTimeStepOutput[0] != 0.05:
+            if len(nonZerosOutput) == 1:
                 # Get activity and model gradient activation around it
                 currentOutputLoc = pref[nonZerosOutput[0]]
                 currentActivation_Output = add_x_loc(currentOutputLoc, pref) + 0.05 # adding noise

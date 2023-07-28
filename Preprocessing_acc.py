@@ -4,6 +4,7 @@
 import numpy as np
 import pandas as pd
 import os
+import random
 # import random
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -24,9 +25,9 @@ def add_x_loc(x_loc, pref):
 # Preperation functions ################################################################################################
 
 # DM & DM Anti
-def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, file_location, sequence_on, sequence_off)
+def prepare_DM_acc(file_location, sequence_on, sequence_off): # (model, loss_type, file_location, sequence_on, sequence_off)
     # For bug fixing
-    file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_DM_easy_1100.xlsx', 0, 48
+    # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_DM_easy_1100.xlsx', 0, 48
     # Open .xlsx and select necessary columns
     df = pd.read_excel(file_location, engine='openpyxl')
     # Add all necessary columns to create the Yang form later
@@ -133,7 +134,7 @@ def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, f
     # Create final Input form
     Input = np.delete(Input, [0, 1, 2, 3, 4, 5, 6, 8], axis=2)
     # Create final output form
-    Output = np.delete(Output, np.s_[0, 1, 2, 4, 5, 6, 7], axis=2)
+    Output = np.delete(Output, np.s_[0, 1, 2, 3, 5, 6, 7], axis=2)
     Output = np.delete(Output, np.s_[34:78], axis=2)
     # Delete all rows that are not needed (for either training or testing)
     Input = Input[:, sequence_on:sequence_off, :]
@@ -303,7 +304,7 @@ def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, f
             for k in range(0, numFixStepsAverage):
                 y_loc[k][j] = float(-1)
 
-            if len(nonZerosOutput) != 0 and currentTimeStepOutput[0] != 0.05:
+            if len(nonZerosOutput) == 1:
                 # Get activity and model gradient activation around it
                 currentOutputLoc = pref[nonZerosOutput[0]]
                 currentActivation_Output = add_x_loc(currentOutputLoc, pref) + 0.05  # adding noise
@@ -333,7 +334,7 @@ def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, f
     return Input, Output, y_loc    #, c_mask
 
 # EF & EF Anti
-def prepare_EF(file_location, sequence_on, sequence_off):
+def prepare_EF_acc(file_location, sequence_on, sequence_off):
     # For bug fixing
     # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_EF_normal_1100.xlsx', 0, 48
     # Open .xlsx and select necessary columns
@@ -378,16 +379,16 @@ def prepare_EF(file_location, sequence_on, sequence_off):
 
     # Get average epoch time steps for the selected task in one session
     finalTrialsList = []
-    numFixStepsTotal = 0
-    numRespStepsTotal = 0
-    iterationSteps = 0
-    for i in incrementList:
-        currentTrial = df_selection[i:i + 2].reset_index().drop(columns=['index'])
-        iterationSteps = iterationSteps + 1
-        numFixSteps = round(currentTrial['Onset Time'][0]/20) # equal to neuronal time constant of 20ms (Yang, 2019)
-        numFixStepsTotal = numFixStepsTotal + numFixSteps
-        numRespSteps = round(currentTrial['Onset Time'][1]/20) # equal to neuronal time constant of 20ms (Yang, 2019)
-        numRespStepsTotal = numRespStepsTotal + numRespSteps
+    # numFixStepsTotal = 0
+    # numRespStepsTotal = 0
+    # iterationSteps = 0
+    # for i in incrementList:
+    #     currentTrial = df_selection[i:i + 2].reset_index().drop(columns=['index'])
+    #     iterationSteps = iterationSteps + 1
+    #     numFixSteps = round(currentTrial['Onset Time'][0]/20) # equal to neuronal time constant of 20ms (Yang, 2019)
+    #     numFixStepsTotal = numFixStepsTotal + numFixSteps
+    #     numRespSteps = round(currentTrial['Onset Time'][1]/20) # equal to neuronal time constant of 20ms (Yang, 2019)
+    #     numRespStepsTotal = numRespStepsTotal + numRespSteps
 
     # numFixStepsAverage = round(numFixStepsTotal/iterationSteps)
     # numRespStepsAverage = round(numRespStepsTotal/iterationSteps)
@@ -402,7 +403,7 @@ def prepare_EF(file_location, sequence_on, sequence_off):
         currentTrial = df_selection[i+1:i+2].reset_index().drop(columns=['index'])
         # Create List with high-sampled rows for both epochs
         currentSequenceList = []
-        for i in range(0, numFixStepsAverage+numRespStepsAverage):
+        for j in range(0, TotalStepsAverage):
             sequence = [currentTrial.iloc[0]]
             currentSequenceList.append(sequence)
         # Append current trial to final list - corresponds to one batch/ one task in one session
@@ -424,7 +425,7 @@ def prepare_EF(file_location, sequence_on, sequence_off):
     # Create final Input form
     Input = np.delete(Input,[0,1,2,3,4,5,6,8],axis = 2)
     # Create final output form
-    Output = np.delete(Output,np.s_[0,1,2,4,5,6,7],axis = 2)
+    Output = np.delete(Output,np.s_[0,1,2,3,5,6,7],axis = 2)
     Output = np.delete(Output,np.s_[34:78],axis = 2)
     # Delete all rows that are not needed (for either training or testing)
     Input = Input[:, sequence_on:sequence_off, :]
@@ -616,7 +617,7 @@ def prepare_EF(file_location, sequence_on, sequence_off):
             for k in range(0, numFixStepsAverage):
                 y_loc[k][j] = float(-1)
 
-            if len(nonZerosOutput) != 0 and currentTimeStepOutput[0] != 0.05:
+            if len(nonZerosOutput) == 1:
                 # Get activity and model gradient activation around it
                 currentOutputLoc = pref[nonZerosOutput[0]]
                 currentActivation_Output = add_x_loc(currentOutputLoc, pref) + 0.05 # adding noise
@@ -642,9 +643,9 @@ def prepare_EF(file_location, sequence_on, sequence_off):
     return Input, Output, y_loc
 
 # RP & RP Anti & RP Ctx1 & RP Ctx2
-def prepare_RP(file_location, sequence_on, sequence_off):
+def prepare_RP_acc(file_location, sequence_on, sequence_off):
     # For bug fixing
-    # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_RP_Anti_easy_1100.xlsx', 0, 48
+    # file_location, sequence_on, sequence_off = os.getcwd() + '/Data CSP/SC/7962396_RP_normal_900.xlsx', 0, 48
     # Open .xlsx and select necessary columns
     # print(file_location)
     df = pd.read_excel(file_location, engine='openpyxl')
@@ -689,16 +690,16 @@ def prepare_RP(file_location, sequence_on, sequence_off):
 
     # Get average epoch time steps for the selected task in one session
     finalTrialsList = []
-    numFixStepsTotal = 0
-    numRespStepsTotal = 0
-    iterationSteps = 0
-    for i in incrementList:
-        currentTrial = df_selection[i:i + 2].reset_index().drop(columns=['index'])
-        iterationSteps = iterationSteps + 1
-        numFixSteps = round(currentTrial['Onset Time'][0]/20) # equal to neuronal time constant of 20ms (Yang, 2019)
-        numFixStepsTotal = numFixStepsTotal + numFixSteps
-        numRespSteps = round(currentTrial['Onset Time'][1]/20) # equal to neuronal time constant of 20ms (Yang, 2019)
-        numRespStepsTotal = numRespStepsTotal + numRespSteps
+    # numFixStepsTotal = 0
+    # numRespStepsTotal = 0
+    # iterationSteps = 0
+    # for i in incrementList:
+    #     currentTrial = df_selection[i:i + 2].reset_index().drop(columns=['index'])
+    #     iterationSteps = iterationSteps + 1
+    #     numFixSteps = round(currentTrial['Onset Time'][0]/20) # equal to neuronal time constant of 20ms (Yang, 2019)
+    #     numFixStepsTotal = numFixStepsTotal + numFixSteps
+    #     numRespSteps = round(currentTrial['Onset Time'][1]/20) # equal to neuronal time constant of 20ms (Yang, 2019)
+    #     numRespStepsTotal = numRespStepsTotal + numRespSteps
 
     # numFixStepsAverage = round(numFixStepsTotal/iterationSteps)
     # numRespStepsAverage = round(numRespStepsTotal/iterationSteps)
@@ -715,7 +716,7 @@ def prepare_RP(file_location, sequence_on, sequence_off):
         # print(i)
         # Create List with high-sampled rows for both epochs
         currentSequenceList = []
-        for i in range(0, numFixStepsAverage+numRespStepsAverage):
+        for i in range(0, TotalStepsAverage):
             sequence = [currentTrial.iloc[0]]
             currentSequenceList.append(sequence)
         # Append current trial to final list - corresponds to one batch/ one task in one session
@@ -737,11 +738,19 @@ def prepare_RP(file_location, sequence_on, sequence_off):
     # Create final Input form
     Input = np.delete(Input,[0,1,2,3,4,5,6,8,77],axis = 2)
     # Create final output form
-    Output = np.delete(Output,np.s_[0,1,2,4,5,6,7],axis = 2)
+    Output = np.delete(Output,np.s_[0,1,2,3,5,6,7],axis = 2)
     Output = np.delete(Output,np.s_[34:78],axis = 2)
     # Delete all rows that are not needed (for either training or testing)
     Input = Input[:, sequence_on:sequence_off, :]
     Output = Output[:, sequence_on:sequence_off, :]
+    # Save correctAnswer now before deleting/changing information
+    correctAnswerList = []
+    for l in range(Input.shape[1]):
+        try:
+            correctAnswerList.append(random.choice(np.where(Input[0, l, 1:32] == Output[0, l, 0])[0])) # select randomly one of the possible right units
+        except:
+            correctAnswerList.append('noStim')
+
 
     # INPUT ############################################################################################################
     # float all fixation input values to 1
@@ -778,6 +787,11 @@ def prepare_RP(file_location, sequence_on, sequence_off):
             for k in range(1,65):
                 if Input[i][j][k] == 'NaN.png':
                     Input[i][j][k] = np.float32(0)
+
+    # float all values on mod1 fields to their true value
+    # co: We can increase the strength to maybe make it more easy for the network to distinguish between the different
+    #  information encoded through activity strength (for mod1 and mod2);
+    #  also the decrease if stimuli will lead to the option of having greater distances between the decoded strenghts
     # float all values on mod1 fields to their true value (arrow direction)
     mod1Dict = {
       '60_0': 0.08,
@@ -798,6 +812,7 @@ def prepare_RP(file_location, sequence_on, sequence_off):
             for k in range(1,33):
                 if Input[i][j][k] != 0:
                     Input[i][j][k] = mod1Dict[Input[i][j][k].split('w')[0]]
+
     # float all values on mod2 fields to their true value (arrow strength)
     mod2Dict = {
       '0_25.png': np.float32(0.25),
@@ -820,8 +835,8 @@ def prepare_RP(file_location, sequence_on, sequence_off):
 
     # Add input gradient activation
     # Create default hyperparameters for network
-    num_ring, n_eachring, n_rule = 2, 32, 12
-    n_input, n_output = 1 + num_ring * n_eachring + n_rule, n_eachring + 1
+    # num_ring, n_eachring, n_rule = 2, 32, 12
+    # n_input, n_output = 1 + num_ring * n_eachring + n_rule, n_eachring + 1
     pref = np.arange(0, 2 * np.pi, 2 * np.pi / 32)
 
     for i in range(0, Input.shape[0]):
@@ -918,16 +933,11 @@ def prepare_RP(file_location, sequence_on, sequence_off):
         'Image 31': 31,
     }
 
+    # co: no need to distinguish between the different WM tasks here, because of 100% objective accuracy
     for i in range(numFixStepsAverage,TotalStepsAverage):
         for j in range(0, Output.shape[1]):
-            # Get the right dictionary
-            if Output[i][j][34].split(' RP')[0] == 'Display 1':
-                outputDict = outputDict_RP_1
-            elif Output[i][j][34].split(' RP')[0] == 'Display 2':
-                outputDict = outputDict_RP_2
-
-            if Output[i][j][0] != 'screen': # and Output[i][j][0] != 'object-2333' and Output[i][j][0] != 'object-2330': # todo: Why needs RP easy 1100 this bug fix?
-                Output[i][j][outputDict[Output[i][j][0]]] = np.float32(0.85)
+            if Output[i][j][0] != 'screen' and correctAnswerList[j] != 'noStim': # and Output[i][j][0] != 'object-2333' and Output[i][j][0] != 'object-2330': # todo: Why needs RP easy 1100 this bug fix?
+                Output[i][j][correctAnswerList[j]+2] = np.float32(0.85) # +2 to shift over the first columns in output array
             else:
                 for k in range(2,34):
                     Output[i][j][k] = np.float32(0.05)
@@ -945,12 +955,11 @@ def prepare_RP(file_location, sequence_on, sequence_off):
             unitRingOutput = np.zeros(32, dtype='float32')
             # Get non-zero values of time steps
             nonZerosOutput = np.nonzero(currentTimeStepOutput)[0]
-
             # Float first fixations rows with -1 for validation matrix y-loc
             for k in range(0, numFixStepsAverage):
                 y_loc[k][j] = np.float32(-1)
 
-            if len(nonZerosOutput) != 0 and currentTimeStepOutput[0] != 0.05:
+            if len(nonZerosOutput) == 1:
                 # Get activity and model gradient activation around it
                 currentOutputLoc = pref[nonZerosOutput[0]]
                 currentActivation_Output = add_x_loc(currentOutputLoc, pref) + 0.05 # adding noise
@@ -976,9 +985,9 @@ def prepare_RP(file_location, sequence_on, sequence_off):
     return Input, Output, y_loc
 
 # WM & WM Anti & WM Ctx1 & WM Ctx2
-def prepare_WM(file_location, sequence_on, sequence_off):
+def prepare_WM_acc(file_location, sequence_on, sequence_off):
     # For bug fixing
-    file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\SC\\7962396_WM_hard_1100.xlsx', 0, 48
+    # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\MH\\7962305_WM_normal_1100.xlsx', 1 ,48
     # Open .xlsx and select necessary columns
     # print(file_location)
     df = pd.read_excel(file_location, engine='openpyxl')
@@ -1022,33 +1031,33 @@ def prepare_WM(file_location, sequence_on, sequence_off):
 
     # Get average epoch time steps for the selected task in one session
     finalTrialsList = []
-    numFixStepsTotal = 0
-    numStimStepsTotal = 0
-    numDelayStepsTotal = 0
-    numRespStepsTotal = 0
-    iterationSteps = 1
-    for i in incrementList:
-        if iterationSteps == len(incrementList):
-            break
-        currentTrial = df_selection[i:i+2].reset_index().drop(columns=['index'])
-        consecutiveTrial = df_selection[incrementList[iterationSteps]:incrementList[iterationSteps]+2].reset_index().drop(columns=['index'])
-        iterationSteps += 1
+    # numFixStepsTotal = 0
+    # numStimStepsTotal = 0
+    # numDelayStepsTotal = 0
+    # numRespStepsTotal = 0
+    # iterationSteps = 1
+    # for i in incrementList:
+    #     if iterationSteps == len(incrementList):
+    #         break
+    #     currentTrial = df_selection[i:i+2].reset_index().drop(columns=['index'])
+    #     consecutiveTrial = df_selection[incrementList[iterationSteps]:incrementList[iterationSteps]+2].reset_index().drop(columns=['index'])
+    #     iterationSteps += 1
 
 
-        ################################################################################################################
-        # todo: Fixation Cross 1
-        numFixSteps = round(currentTrial['Onset Time'][0]/20) # equal to neuronal time constant of 20ms (Yang, 2019)
-        numFixStepsTotal = numFixStepsTotal + numFixSteps
-        # todo: Stim presentation 1
-        numStimSteps = round(currentTrial['Onset Time'][1]/20)  # equal to neuronal time constant of 20ms (Yang, 2019)
-        numStimStepsTotal = numStimStepsTotal + numStimSteps
-        # todo: Delay 1 = Fixation Cross 2
-        numDelaySteps = round(consecutiveTrial['Onset Time'][0]/20)  # equal to neuronal time constant of 20ms (Yang, 2019)
-        numDelayStepsTotal = numDelayStepsTotal + numDelaySteps
-        # todo: Response 1 = Stim presentation 2
-        numRespSteps = round(consecutiveTrial['Onset Time'][1]/20)  # equal to neuronal time constant of 20ms (Yang, 2019)
-        numRespStepsTotal = numRespStepsTotal + numRespSteps
-        ################################################################################################################
+        # ################################################################################################################
+        # # todo: Fixation Cross 1
+        # numFixSteps = round(currentTrial['Onset Time'][0]/20) # equal to neuronal time constant of 20ms (Yang, 2019)
+        # numFixStepsTotal = numFixStepsTotal + numFixSteps
+        # # todo: Stim presentation 1
+        # numStimSteps = round(currentTrial['Onset Time'][1]/20)  # equal to neuronal time constant of 20ms (Yang, 2019)
+        # numStimStepsTotal = numStimStepsTotal + numStimSteps
+        # # todo: Delay 1 = Fixation Cross 2
+        # numDelaySteps = round(consecutiveTrial['Onset Time'][0]/20)  # equal to neuronal time constant of 20ms (Yang, 2019)
+        # numDelayStepsTotal = numDelayStepsTotal + numDelaySteps
+        # # todo: Response 1 = Stim presentation 2
+        # numRespSteps = round(consecutiveTrial['Onset Time'][1]/20)  # equal to neuronal time constant of 20ms (Yang, 2019)
+        # numRespStepsTotal = numRespStepsTotal + numRespSteps
+        # ################################################################################################################
 
 
     # numFixStepsAverage = round(numFixStepsTotal/iterationSteps)
@@ -1058,11 +1067,10 @@ def prepare_WM(file_location, sequence_on, sequence_off):
     # TotalStepsAverage = numFixStepsAverage + numStimStepsAverage + numDelayStepsAverage + numRespStepsAverage
 
     # todo: For bug fixing we will create equal sequence length for all sessions
-    numFixStepsAverage = 10
-    numStimStepsAverage = 65
-    numDelayStepsAverage = 10
-    numRespStepsAverage = 65
-    TotalStepsAverage = numFixStepsAverage + numStimStepsAverage + numDelayStepsAverage + numRespStepsAverage
+    numFixStepsAverage = 20
+    numStimStepsAverage = 60
+    numDelayStepsAverage = 20
+    TotalStepsAverage = numFixStepsAverage + numStimStepsAverage + numDelayStepsAverage
 
     # Take all trials and high-sample them to the average steps
     incrementSteps = 1
@@ -1070,21 +1078,16 @@ def prepare_WM(file_location, sequence_on, sequence_off):
         if incrementSteps == len(incrementList):
             break
         currentTrial = df_selection[i+1:i+2].reset_index().drop(columns=['index'])
-        consecutiveTrial = df_selection[incrementList[incrementSteps]+1:incrementList[incrementSteps]+2].reset_index().drop(columns=['index'])
+        # consecutiveTrial = df_selection[incrementList[incrementSteps]+1:incrementList[incrementSteps]+2].reset_index().drop(columns=['index'])
         incrementSteps += 1
 
-        # Create List with high-sampled rows for first 2 epochs
         currentSequenceList = []
-        for j in range(0, numFixStepsAverage+numStimStepsAverage):
+        # Create List with high-sampled rows for one trial
+        for j in range(0, TotalStepsAverage):
             sequence = [currentTrial.iloc[0]]
-            currentSequenceList.append(sequence)
-        # And for second 2 epochs
-        for k in range(0, numDelayStepsAverage+numRespStepsAverage):
-            sequence = [consecutiveTrial.iloc[0]]
             currentSequenceList.append(sequence)
         # Append current trial to final list - corresponds to one batch/ one task in one session
         finalTrialsList.append(currentSequenceList)
-
 
     # Create final df for INPUT and OUPUT
     newOrderList = []
@@ -1101,19 +1104,28 @@ def prepare_WM(file_location, sequence_on, sequence_off):
     # Create final Input form
     Input = np.delete(Input,[0,1,2,3,4,5,6,7,9,77],axis = 2)
     # Create final output form
-    # Output = np.delete(Output,np.s_[0,1,2,5,6,7,8],axis = 2)
-    # co: BUG FIX > make all responses 100% objectively correct
     Output = np.delete(Output, np.s_[0, 1, 2, 6, 7, 8], axis=2)
     Output = np.delete(Output, np.s_[34:78], axis=2)
     # Delete all rows that are not needed (for either training or testing)
     Input = Input[:, sequence_on:sequence_off, :]
     Output = Output[:, sequence_on:sequence_off, :]
+    # Save correctAnswer now before deleting/changing information
+    correctAnswerList = []
+    for l in range(Input.shape[1]):
+        try:
+            correctAnswerList.append(np.where(Input[0, l, 1:32] == Output[0, l, 2])[0][0])
+        except:
+            correctAnswerList.append('noStim')
 
     # INPUT ############################################################################################################
-    # float all fixation input values to 1
-    for i in range(0,Input.shape[0]):
+    # float all fixation input values to 1 until delay epoch
+    for i in range(0, numFixStepsAverage+numStimStepsAverage):
         for j in range(0,Input.shape[1]):
             Input[i][j][0] = np.float32(1)
+    # float all fixation input values to 0 in delay epoch
+    for i in range(numFixStepsAverage + numStimStepsAverage, TotalStepsAverage):
+        for j in range(0, Input.shape[1]):
+            Input[i][j][0] = np.float32(0)
     # float all task values to 0
     for i in range(0,Input.shape[0]):
         for j in range(0,Input.shape[1]):
@@ -1135,7 +1147,7 @@ def prepare_WM(file_location, sequence_on, sequence_off):
       'WM Ctx1 ': 75,
       'WM Ctx2 ': 76
     }
-    # float task values to 1
+    # float right task values to 1
     for i in range(0,Input.shape[0]):
         for j in range(0,Input.shape[1]):
             Input[i][j][taskDict[df['Spreadsheet'][0].split('-')[0]]] = np.float32(1)
@@ -1145,7 +1157,11 @@ def prepare_WM(file_location, sequence_on, sequence_off):
             for k in range(1,65):
                 if Input[i][j][k] == 'NaN.png' or pd.isna(Input[i][j][k]):
                     Input[i][j][k] = np.float32(0)
+
     # float all values on mod1 fields to their true value
+    # co: We can increase the strength to maybe make it more easy for the network to distinguish between the different
+    #  information encoded through activity strength (for mod1 and mod2);
+    #  also the decrease if stimuli will lead to the option of having greater distances between the decoded strenghts
     mod1Dict = {
       '60_0': 0.08,
       '60_1': 0.17,
@@ -1160,15 +1176,6 @@ def prepare_WM(file_location, sequence_on, sequence_off):
       '360_0': 0.92,
       '360_1': 1.0,
     }
-
-    # co: BUG FIX get field of objectively right answer for output
-    trialStimuli = [[] for i in range(Input.shape[1])]
-    for j in range(0, Input.shape[1]):
-        for k in range(1, 33):
-            if isinstance(Input[0][j][k], str):
-                trialStimuli[j].append([Input[0][j][k], k])
-    trialStimuli.pop(0)
-
     for i in range(0,Input.shape[0]):
         for j in range(0,Input.shape[1]):
             for k in range(1,33):
@@ -1194,15 +1201,15 @@ def prepare_WM(file_location, sequence_on, sequence_off):
             for k in range(1,65):
                     Input[i][j][k] = np.float32(0)
     # float all field values of delay period to 0
-    for i in range(numFixStepsAverage+numStimStepsAverage, TotalStepsAverage-numRespStepsAverage):
+    for i in range(numFixStepsAverage+numStimStepsAverage, TotalStepsAverage):
         for j in range(0, Input.shape[1]):
             for k in range(1, 65):
                 Input[i][j][k] = np.float32(0)
 
     # Add input gradient activation
     # Create default hyperparameters for network
-    num_ring, n_eachring, n_rule = 2, 32, 12
-    n_input, n_output = 1 + num_ring * n_eachring + n_rule, n_eachring + 1
+    # num_ring, n_eachring, n_rule = 2, 32, 12
+    # n_input, n_output = 1 + num_ring * n_eachring + n_rule, n_eachring + 1
     pref = np.arange(0, 2 * np.pi, 2 * np.pi / 32)
 
     for i in range(0, Input.shape[0]):
@@ -1240,11 +1247,12 @@ def prepare_WM(file_location, sequence_on, sequence_off):
                 Input[i][j][k] = np.float32(Input[i][j][k])
     # Also change dtype for entire array
     Input = Input.astype('float32')
-    # Pop out last row of input to come to same matrix shape as output
-    Input = np.delete(Input, (-1), axis=1)
+    # # Pop out first row of input to come to same matrix shape as output
+    # Input = np.delete(Input, (0), axis=1)
 
     # Sanity check
     print('Input solved: ', df['Spreadsheet'][0], ' ', df['TimeLimit'][0])
+
 
     # OUTPUT ###########################################################################################################
     # float all field units during fixation epoch on 0.05
@@ -1253,79 +1261,24 @@ def prepare_WM(file_location, sequence_on, sequence_off):
             for k in range(4, 36):
                 Output[i][j][k] = np.float32(0.05)
     # float all field units of response epoch to 0
-    for i in range(numFixStepsAverage + numStimStepsAverage + numDelayStepsAverage, TotalStepsAverage):
+    for i in range(numFixStepsAverage + numStimStepsAverage, TotalStepsAverage):
         for j in range(0, Output.shape[1]):
             for k in range(4, 36):
                 Output[i][j][k] = np.float32(0)
     # float all fixation outputs during response period to 0.05
-    for i in range(numFixStepsAverage + numStimStepsAverage + numDelayStepsAverage, TotalStepsAverage):
+    for i in range(numFixStepsAverage + numStimStepsAverage, TotalStepsAverage):
         for j in range(0, Output.shape[1]):
             Output[i][j][3] = np.float32(0.05)
 
-    # Delete first row in output
-    Output = np.delete(Output, (0), axis=1)
-
-    # Assign field units to their according participant response value after fixation period
-    outputDict_WM = {
-        'Image 1': 1,
-        'Image 2': 2,
-        'Image 3': 3,
-        'Image 4': 4,
-        'Image 5': 5,
-        'Image 6': 6,
-        'Image 7': 7,
-        'Image 8': 8,
-        'Image 9': 9,
-        'Image 10': 10,
-        'Image 11': 11,
-        'Image 12': 12,
-        'Image 13': 13,
-        'Image 14': 14,
-        'Image 15': 15,
-        'Image 16': 16,
-        'Image 17': 17,
-        'Image 18': 18,
-        'Image 19': 19,
-        'Image 20': 20,
-        'Image 21': 21,
-        'Image 22': 22,
-        'Image 23': 23,
-        'Image 24': 24,
-        'Image 25': 25,
-        'Image 26': 26,
-        'Image 27': 27,
-        'Image 28': 28,
-        'Image 29': 29,
-        'Image 30': 30,
-        'Image 31': 31,
-        'Image 32': 32
-    }
-
-    outputDict_WM_Ctx = {
-        'object-1591': 8,
-        'object-1593': 8,
-        'object-1595': 8,
-        'object-1597': 8,
-        'object-1592': 24,
-        'object-1594': 24,
-        'object-1596': 24,
-        'object-1598': 24,
-    }
-
-    for i in range(numFixStepsAverage + numStimStepsAverage + numDelayStepsAverage, TotalStepsAverage):
+    # co: no need to distinguish between the different WM tasks here, because of 100% objective accuracy
+    for i in range(numFixStepsAverage + numStimStepsAverage, TotalStepsAverage):
         for j in range(0, Output.shape[1]):
             # if isinstance(Output[i][j][36], str):
-            if Output[i][j][1] != 'screen' and Output[i][j][1] != 'Fixation Cross' and Output[i][j][1] != 'Response':
-                if trialStimuli[j][0][0] == Output[0][j][2]:
-                    Output[i][j][trialStimuli[j][0][1]+3] = np.float32(0.85) # +3 to shift over the first columns in output array
-                elif trialStimuli[j][1][0] == Output[0][j][2]:
-                    Output[i][j][trialStimuli[j][1][1]+3] = np.float32(0.85)
+            if Output[i][j][1] != 'screen' and Output[i][j][1] != 'Fixation Cross' and Output[i][j][1] != 'Response' and correctAnswerList[j] != 'noStim':
+                Output[i][j][correctAnswerList[j]+4] = np.float32(0.85) # +3 to shift over the first columns in output array
             else:
                 for k in range(4,36):
                     Output[i][j][k] = np.float32(0.05)
-            # else:
-            #     for k in range(4, 36):
-            #         Output[i][j][k] = np.float32(0.05)
 
     # Drop unnecessary columns
     Output = np.delete(Output,[0,1,2,36],axis = 2)
@@ -1376,7 +1329,7 @@ def prepare_WM(file_location, sequence_on, sequence_off):
 # General .xlsx list
 xlsxFolderList = os.listdir(os.getcwd() + '/Data CSP/')
 
-def fileDict(xlsxFolder, xlsxFolderList):
+def fileDict_acc(xlsxFolder, xlsxFolderList):
     # Create file dictionary
     file_dict = dict()
     # Allocate lists for every task

@@ -12,8 +12,8 @@ import tensorflow as tf
 
 from network import Model
 from collections import defaultdict
-from Preprocessing import prepare_DM, prepare_EF, prepare_RP #, prepare_WM, fileDict
-from Preprocessing_acc import prepare_WM, fileDict
+from Preprocessing import prepare_DM, prepare_EF, prepare_RP, prepare_WM, fileDict
+from Preprocessing_acc import prepare_WM_acc, prepare_DM_acc, prepare_EF_acc, prepare_RP_acc, fileDict_acc
 # Interactive mode for matplotlib will be activated which enables scientific computing (code batch execution)
 # import matplotlib.pyplot as plt
 
@@ -267,7 +267,7 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
         rule_name_print = ' & '.join(rule_train)
 
     print('VALIDATION ##########################################################################')
-    print('Trial {:7d}'.format(log['trials'][-1] * 48) +      # [-1] calls the last element of a list
+    print('Trial {:7d}'.format(log['trials'][-1] * 47) +      # [-1] calls the last element of a list
           '  | Time {:0.2f} s'.format(log['times'][-1]) +
           '  | Now training ' + rule_name_print)
 
@@ -421,20 +421,18 @@ def train_BeRNN_oneTask(model_dir, hp=None, display_step = 250, ruleset='BeRNN',
     WM_Ctx1_list = []
     WM_Ctx2_list = []
 
+    # /pandora/home/oliver.frank/Desktop/Multitask_BeRNN/Data CSP/MH/7962304_WM_easy_1100.xlsx
+
     for i in random_AllTasks_list:
-        if i.split('/')[2] == 'MH':     # 7 on pandora
-            if i.split('_')[2] == 'WM' and i.split('_')[3] != 'Anti' and i.split('_')[3] != 'Ctx1' and i.split('_')[3] != 'Ctx2':
-                WM_list.append(i)
-                WM_list.append(i)
-                WM_list.append(i)
-                WM_list.append(i)
-                WM_list.append(i)
-            elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Anti':
-                WM_Anti_list.append(i)
-            elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Ctx1':
-                WM_Ctx1_list.append(i)
-            elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Ctx2':
-                WM_Ctx2_list.append(i)
+        # if i.split('/')[2] == 'MH':     # 7 on pandora
+        if i.split('_')[2] == 'WM' and i.split('_')[3] != 'Anti' and i.split('_')[3] != 'Ctx1' and i.split('_')[3] != 'Ctx2':
+            WM_list.append(i)
+        elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Anti':
+            WM_Anti_list.append(i)
+        elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Ctx1':
+            WM_Ctx1_list.append(i)
+        elif i.split('_')[2] == 'WM' and i.split('_')[3] == 'Ctx2':
+            WM_Ctx2_list.append(i)
 
     with tf.Session() as sess:
         if load_dir is not None:
@@ -488,7 +486,7 @@ def train_BeRNN_oneTask(model_dir, hp=None, display_step = 250, ruleset='BeRNN',
                 try:
                     # Validation
                     if step % display_step == 0:
-                        log['trials'].append(batchNumber*48)   # Average trials per batch fed to network on one task (48/12)
+                        log['trials'].append(batchNumber*47)   # Average trials per batch fed to network on one task (48/12)
                         log['times'].append(time.time() - t_start)
                         log = do_eval_BeRNN(sess, model, log, hp['rule_trains'], WM_list)
                         print('TRAINING ##########################################################################')
@@ -504,7 +502,7 @@ def train_BeRNN_oneTask(model_dir, hp=None, display_step = 250, ruleset='BeRNN',
                     elif currentBatch.split('_')[2] == 'RP':
                         Input, Output, y_loc = prepare_RP(currentBatch, 0, 48)
                     elif currentBatch.split('_')[2] == 'WM':
-                        Input, Output, y_loc = prepare_WM(currentBatch, 0, 48)
+                        Input, Output, y_loc = prepare_WM(currentBatch, 1, 48)
                     # Generating feed_dict.
                     feed_dict = gen_feed_dict_BeRNN(model, Input, Output, hp) # co: cmask problem: (model, Input, Output, c_mask, hp)
                     sess.run(model.train_step, feed_dict=feed_dict)
@@ -520,6 +518,7 @@ def train_BeRNN_oneTask(model_dir, hp=None, display_step = 250, ruleset='BeRNN',
 # Apply the network training
 model_dir_BeRNN = os.getcwd() + '/BeRNN_models/generalModel_CSP_200_WM_acc/'
 train_BeRNN_oneTask(model_dir=model_dir_BeRNN, seed=0, display_step=250, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
+# every display_step stands for one batch
 
 
 # ########################################################################################################################
@@ -652,9 +651,9 @@ train_BeRNN_oneTask(model_dir=model_dir_BeRNN, seed=0, display_step=250, rule_tr
 #     plt.show()
 #
 #
-# model_dir = os.getcwd() + '/BeRNN_models/generalModel_CSP_10_WM_acc'
+# model_dir_BeRNN = os.getcwd() + '/BeRNN_models/generalModel_CSP_100_WM_acc/'
 # rule = 'WM'
 # # Plot activity of input, recurrent and output layer for one test trial
-# easy_activity_plot_BeRNN(model_dir, rule)
+# easy_activity_plot_BeRNN(model_dir_BeRNN, rule)
 # # Plot improvement of performance over iterating training steps
-# plot_performanceprogress_BeRNN(model_dir)
+# plot_performanceprogress_BeRNN(model_dir_BeRNN)
