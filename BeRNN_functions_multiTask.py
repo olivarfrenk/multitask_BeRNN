@@ -499,7 +499,7 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
 # model_dir_BeRNN = os.getcwd() + '\\generalModel_BeRNN\\' # Very first model trained with all available CSP working group data
 
 # Apply the network training
-model_dir_BeRNN = os.getcwd() + '/BeRNN_models/MH_500_train-err_validate-acc/'
+model_dir_BeRNN = os.getcwd() + '/BeRNN_models/MH_200_train-err_validate-err/'
 train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=250, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
 
 
