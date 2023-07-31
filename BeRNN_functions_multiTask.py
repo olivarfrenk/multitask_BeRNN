@@ -290,13 +290,13 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
                     currentRule = currentBatch.split('_')[2]
 
             if currentBatch.split('_')[2] == 'DM':
-                Input, Output, y_loc = prepare_DM(currentBatch, 48, 60)  # co: cmask problem: (model, hp['loss_type'], currentBatch, 0, 48)
+                Input, Output, y_loc = prepare_DM_acc(currentBatch, 48, 60)  # co: cmask problem: (model, hp['loss_type'], currentBatch, 0, 48)
             elif currentBatch.split('_')[2] == 'EF':
-                Input, Output, y_loc = prepare_EF(currentBatch, 48, 60)
+                Input, Output, y_loc = prepare_EF_acc(currentBatch, 48, 60)
             elif currentBatch.split('_')[2] == 'RP':
-                Input, Output, y_loc = prepare_RP(currentBatch, 48, 60)
+                Input, Output, y_loc = prepare_RP_acc(currentBatch, 48, 60)
             elif currentBatch.split('_')[2] == 'WM':
-                Input, Output, y_loc = prepare_WM(currentBatch, 48, 60)
+                Input, Output, y_loc = prepare_WM_acc(currentBatch, 48, 60)
 
             feed_dict = gen_feed_dict_BeRNN(model, Input, Output, hp)
             c_lsq, c_reg, y_hat_test = sess.run(
@@ -411,8 +411,8 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
     t_start = time.time()
 
     # todo: Create taskList to generate trials from
-    xlsxFolder = os.getcwd() + '/Data CSP/'
-    xlsxFolderList = os.listdir(os.getcwd() + '/Data CSP/')
+    xlsxFolder = os.getcwd() + '/Data MH/'
+    xlsxFolderList = os.listdir(os.getcwd() + '/Data MH/')
     AllTasks_list = fileDict(xlsxFolder, xlsxFolderList)
     random_AllTasks_list = random.sample(AllTasks_list, len(AllTasks_list))
 
@@ -461,7 +461,7 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
 
         batchNumber = 0
         # loop through all existing data several times
-        for i in range(1):
+        for i in range(500):
             # loop through all existing data
             for step in range(len(random_AllTasks_list)): # * hp['batch_size_train'] <= max_steps:
                 currentBatch = random_AllTasks_list[step]
@@ -499,7 +499,7 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
 # model_dir_BeRNN = os.getcwd() + '\\generalModel_BeRNN\\' # Very first model trained with all available CSP working group data
 
 # Apply the network training
-model_dir_BeRNN = os.getcwd() + '/BeRNN_models/generalModel_200_train-err_validate-err/'
+model_dir_BeRNN = os.getcwd() + '/BeRNN_models/MH_500_train-err_validate-acc/'
 train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=250, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
 
 
@@ -633,7 +633,7 @@ train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=250, rule_trains=Non
 #     plt.show()
 #
 #
-# model_dir = os.getcwd() + '/BeRNN_models/generalModel_CSP_200_pan'
+# model_dir = os.getcwd() + '/BeRNN_models/MH_200_train-err_validate-err/'
 # rule = 'DM'
 # # Plot activity of input, recurrent and output layer for one test trial
 # easy_activity_plot_BeRNN(model_dir, rule)

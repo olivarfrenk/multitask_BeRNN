@@ -987,7 +987,7 @@ def prepare_RP_acc(file_location, sequence_on, sequence_off):
 # WM & WM Anti & WM Ctx1 & WM Ctx2
 def prepare_WM_acc(file_location, sequence_on, sequence_off):
     # For bug fixing
-    # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\MH\\7962305_WM_normal_1100.xlsx', 1 ,48
+    # file_location, sequence_on, sequence_off = os.getcwd() + '/Data CSP/SC/7962396_WM_hard_900.xlsx', 1 ,48
     # Open .xlsx and select necessary columns
     # print(file_location)
     df = pd.read_excel(file_location, engine='openpyxl')
@@ -1363,7 +1363,8 @@ def fileDict_acc(xlsxFolder, xlsxFolderList):
 
     # Fill list for different task difficulties over all participants
     for j in file_dict:
-        for i in xlsxFolderList[1:7]:
+        # co: Change that again if you want to train data from all participants [1:7]
+        for i in xlsxFolderList[0:2]:
             xlsxFileList = os.listdir(xlsxFolder + i)
             # Fill all lists
             for k in range(row_dict[j][0],row_dict[j][1]):

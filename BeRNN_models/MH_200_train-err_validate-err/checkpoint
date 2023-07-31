@@ -1,0 +1,2 @@
+model_checkpoint_path: "C:\\Users\\Oliver.Frank\\PycharmProjects\\multitask_BeRNN/BeRNN_models/MH_200_train-err_validate-err/model.ckpt"
+all_model_checkpoint_paths: "C:\\Users\\Oliver.Frank\\PycharmProjects\\multitask_BeRNN/BeRNN_models/MH_200_train-err_validate-err/model.ckpt"

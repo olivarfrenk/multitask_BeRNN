@@ -1402,7 +1402,8 @@ def fileDict(xlsxFolder, xlsxFolderList):
 
     # Fill list for different task difficulties over all participants
     for j in file_dict:
-        for i in xlsxFolderList[1:7]:
+        # co: Change that again if you want to train data from all participants [1:7]
+        for i in xlsxFolderList[0:2]:
             xlsxFileList = os.listdir(xlsxFolder + i)
             # Fill all lists
             for k in range(row_dict[j][0],row_dict[j][1]):

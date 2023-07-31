@@ -15,7 +15,7 @@ from collections import defaultdict
 from Preprocessing import prepare_DM, prepare_EF, prepare_RP, prepare_WM, fileDict
 from Preprocessing_acc import prepare_WM_acc, prepare_DM_acc, prepare_EF_acc, prepare_RP_acc, fileDict_acc
 # Interactive mode for matplotlib will be activated which enables scientific computing (code batch execution)
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
 ########################################################################################################################
@@ -521,139 +521,142 @@ train_BeRNN_oneTask(model_dir=model_dir_BeRNN, seed=0, display_step=250, rule_tr
 # every display_step stands for one batch
 
 
-# ########################################################################################################################
-# '''Network analysis'''
-# ########################################################################################################################
-# # Analysis functions
-# _rule_color = {
-#             'DM': 'green',
-#             'DM Anti': 'olive',
-#             'EF': 'forest green',
-#             'EF Anti': 'mustard',
-#             'RP': 'tan',
-#             'RP Anti': 'brown',
-#             'RP Ctx1': 'lavender',
-#             'RP Ctx2': 'aqua',
-#             'WM': 'bright purple',
-#             'WM Anti': 'green blue',
-#             'WM Ctx1': 'blue',
-#             'WM Ctx2': 'indigo'
-#             }
-#
-# rule_color = {k: 'xkcd:'+v for k, v in _rule_color.items()}
-#
-# def easy_activity_plot_BeRNN(model_dir, rule):
-#     """A simple plot of neural activity from one task.
-#
-#     Args:
-#         model_dir: directory where model file is saved
-#         rule: string, the rule to plot
-#     """
-#
-#     model = Model(model_dir)
-#     hp = model.hp
-#
-#     xlsxFolder = os.getcwd() + '\\Data CSP\\'
-#     xlsxFolderList = os.listdir(os.getcwd() + '\\Data CSP\\')
-#     AllTasks_list = fileDict(xlsxFolder, xlsxFolderList)
-#     random_AllTasks_list = random.sample(AllTasks_list, len(AllTasks_list))
-#
-#     with tf.Session() as sess:
-#         model.restore()
-#
-#         currentRule = ' '
-#         while currentRule != rule:
-#             currentBatch = random.sample(AllTasks_list, 1)[0]
-#             if len(currentBatch.split('_')) == 6:
-#                 currentRule = currentBatch.split('_')[2] + ' ' + currentBatch.split('_')[3]
-#             else:
-#                 currentRule = currentBatch.split('_')[2]
-#
-#         if currentBatch.split('_')[2] == 'DM':
-#             Input, Output, y_loc = prepare_DM(currentBatch, 48, 60)  # co: cmask problem: (model, hp['loss_type'], currentBatch, 0, 48)
-#         elif currentBatch.split('_')[2] == 'EF':
-#             Input, Output, y_loc = prepare_EF(currentBatch, 48, 60)
-#         elif currentBatch.split('_')[2] == 'RP':
-#             Input, Output, y_loc = prepare_RP(currentBatch, 48, 60)
-#         elif currentBatch.split('_')[2] == 'WM':
-#             Input, Output, y_loc = prepare_WM(currentBatch, 48, 60)
-#
-#
-#         feed_dict = gen_feed_dict_BeRNN(model, Input, Output, hp)
-#         h, y_hat = sess.run([model.h, model.y_hat], feed_dict=feed_dict)
-#         # All matrices have shape (n_time, n_condition, n_neuron)
-#
-#     # Take only the one example trial
-#     i_trial = 10
-#
-#     for activity, title in zip([Input, h, y_hat],
-#                                ['input', 'recurrent', 'output']):
-#         plt.figure()
-#         plt.imshow(activity[:,i_trial,:].T, aspect='auto', cmap='hot',      # np.uint8
-#                    interpolation='none', origin='lower')
-#         plt.title(title)
-#         plt.colorbar()
-#         plt.show()
-#
-# def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
-#     # Plot Training Progress
-#     log = load_log_BeRNN(model_dir)
-#     hp = load_hp_BeRNN(model_dir)
-#
-#     trials = log['trials']  #
-#
-#     fs = 6 # fontsize
-#     fig = plt.figure(figsize=(3.5,1.2))
-#     ax = fig.add_axes([0.1,0.25,0.35,0.6])
-#     lines = list()
-#     labels = list()
-#
-#     x_plot = np.array(trials)
-#     if rule_plot == None:
-#         rule_plot = hp['rules']
-#
-#     for i, rule in enumerate(rule_plot):
-#         # line = ax1.plot(x_plot, np.log10(cost_tests[rule]),color=color_rules[i%26])
-#         # ax2.plot(x_plot, perf_tests[rule],color=color_rules[i%26])
-#         line = ax.plot(x_plot, np.log10(log['cost_'+rule]),
-#                        color=rule_color[rule])
-#         ax.plot(x_plot, log['perf_'+rule], color=rule_color[rule])
-#         lines.append(line[0])
-#         labels.append(rule)
-#
-#     ax.tick_params(axis='both', which='major', labelsize=fs)
-#
-#     ax.set_ylim([0, 1])
-#     ax.set_xlabel('Trials per task',fontsize=fs, labelpad=2)
-#     ax.set_ylabel('Performance',fontsize=fs, labelpad=0)
-#     ax.locator_params(axis='x', nbins=3)
-#     ax.set_yticks([0,1])
-#     ax.spines["right"].set_visible(False)
-#     ax.spines["top"].set_visible(False)
-#     ax.xaxis.set_ticks_position('bottom')
-#     ax.yaxis.set_ticks_position('left')
-#     lg = fig.legend(lines, labels, title='Task',ncol=2,bbox_to_anchor=(0.47,0.5),
-#                     fontsize=fs,labelspacing=0.3,loc=6,frameon=False)
-#     plt.setp(lg.get_title(),fontsize=fs)
-#     # Add the randomness thresholds
-#     # DM & RP Ctx
-#     plt.axhline(y=0.2, color='green', label= 'DM & DM Anti & RP Ctx1 & RP Ctx2', linestyle=':')
-#     # EF
-#     plt.axhline(y=0.25, color='black', label= 'EF & EF Anti', linestyle=':')
-#     # RP
-#     plt.axhline(y=0.143, color='brown', label= 'RP & RP Anti', linestyle=':')
-#     # WM
-#     plt.axhline(y=0.5, color='blue', label= 'WM & WM Anti & WM Ctx1 & WM Ctx2', linestyle=':')
-#
-#     rt = fig.legend(title='Randomness threshold', bbox_to_anchor=(0.47, 0.4), fontsize=fs, labelspacing=0.3, loc=6, frameon=False)
-#     plt.setp(rt.get_title(), fontsize=fs)
-#
-#     plt.show()
-#
-#
-# model_dir_BeRNN = os.getcwd() + '/BeRNN_models/generalModel_CSP_100_WM_acc/'
-# rule = 'WM'
-# # Plot activity of input, recurrent and output layer for one test trial
-# easy_activity_plot_BeRNN(model_dir_BeRNN, rule)
-# # Plot improvement of performance over iterating training steps
-# plot_performanceprogress_BeRNN(model_dir_BeRNN)
+########################################################################################################################
+'''Network analysis'''
+########################################################################################################################
+# Analysis functions
+_rule_color = {
+            'DM': 'green',
+            'DM Anti': 'olive',
+            'EF': 'forest green',
+            'EF Anti': 'mustard',
+            'RP': 'tan',
+            'RP Anti': 'brown',
+            'RP Ctx1': 'lavender',
+            'RP Ctx2': 'aqua',
+            'WM': 'bright purple',
+            'WM Anti': 'green blue',
+            'WM Ctx1': 'blue',
+            'WM Ctx2': 'indigo'
+            }
+
+rule_color = {k: 'xkcd:'+v for k, v in _rule_color.items()}
+
+def easy_activity_plot_BeRNN(model_dir, rule):
+    """A simple plot of neural activity from one task.
+
+    Args:
+        model_dir: directory where model file is saved
+        rule: string, the rule to plot
+    """
+
+    model = Model(model_dir)
+    hp = model.hp
+
+    xlsxFolder = os.getcwd() + '\\Data CSP\\'
+    xlsxFolderList = os.listdir(os.getcwd() + '\\Data CSP\\')
+    AllTasks_list = fileDict(xlsxFolder, xlsxFolderList)
+    random_AllTasks_list = random.sample(AllTasks_list, len(AllTasks_list))
+
+    with tf.Session() as sess:
+        model.restore()
+
+        currentRule = ' '
+        while currentRule != rule:
+            currentBatch = random.sample(AllTasks_list, 1)[0]
+            if len(currentBatch.split('_')) == 6:
+                currentRule = currentBatch.split('_')[2] + ' ' + currentBatch.split('_')[3]
+            else:
+                currentRule = currentBatch.split('_')[2]
+
+        if currentBatch.split('_')[2] == 'DM':
+            Input, Output, y_loc = prepare_DM(currentBatch, 48, 60)  # co: cmask problem: (model, hp['loss_type'], currentBatch, 0, 48)
+        elif currentBatch.split('_')[2] == 'EF':
+            Input, Output, y_loc = prepare_EF(currentBatch, 48, 60)
+        elif currentBatch.split('_')[2] == 'RP':
+            Input, Output, y_loc = prepare_RP(currentBatch, 48, 60)
+        elif currentBatch.split('_')[2] == 'WM':
+            Input, Output, y_loc = prepare_WM(currentBatch, 48, 60)
+
+
+        feed_dict = gen_feed_dict_BeRNN(model, Input, Output, hp)
+        h, y_hat = sess.run([model.h, model.y_hat], feed_dict=feed_dict)
+        # All matrices have shape (n_time, n_condition, n_neuron)
+
+    # Take only the one example trial
+    i_trial = 10
+
+    for activity, title in zip([Input, h, y_hat],
+                               ['input', 'recurrent', 'output']):
+        plt.figure()
+        plt.imshow(activity[:,i_trial,:].T, aspect='auto', cmap='hot',      # np.uint8
+                   interpolation='none', origin='lower')
+        plt.title(title)
+        plt.colorbar()
+        plt.show()
+
+def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
+    # Plot Training Progress
+    log = load_log_BeRNN(model_dir)
+    hp = load_hp_BeRNN(model_dir)
+
+    # co: add [::2] if you want to have only every second validation value
+    trials = log['trials'][::10]
+
+    fs = 6 # fontsize
+    fig = plt.figure(figsize=(3.5,1.2))
+    ax = fig.add_axes([0.1,0.25,0.35,0.6])
+    lines = list()
+    labels = list()
+
+    x_plot = np.array(trials)
+    if rule_plot == None:
+        rule_plot = hp['rules']
+
+    for i, rule in enumerate(rule_plot):
+        # line = ax1.plot(x_plot, np.log10(cost_tests[rule]),color=color_rules[i%26])
+        # ax2.plot(x_plot, perf_tests[rule],color=color_rules[i%26])
+        # co: add [::2] if you want to have only every second validation value
+        line = ax.plot(x_plot, np.log10(log['cost_'+'DM'][::10]),
+                       color=rule_color[rule])
+        # co: add [::2] if you want to have only every second validation value
+        ax.plot(x_plot, log['perf_'+rule][::10], color=rule_color[rule])
+        lines.append(line[0])
+        labels.append(rule)
+
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+
+    ax.set_ylim([0, 1])
+    ax.set_xlabel('Trials per task',fontsize=fs, labelpad=2)
+    ax.set_ylabel('Performance',fontsize=fs, labelpad=0)
+    ax.locator_params(axis='x', nbins=3)
+    ax.set_yticks([0,1])
+    ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
+    lg = fig.legend(lines, labels, title='Task',ncol=2,bbox_to_anchor=(0.47,0.5),
+                    fontsize=fs,labelspacing=0.3,loc=6,frameon=False)
+    plt.setp(lg.get_title(),fontsize=fs)
+    # Add the randomness thresholds
+    # DM & RP Ctx
+    plt.axhline(y=0.2, color='green', label= 'DM & DM Anti & RP Ctx1 & RP Ctx2', linestyle=':')
+    # EF
+    plt.axhline(y=0.25, color='black', label= 'EF & EF Anti', linestyle=':')
+    # RP
+    plt.axhline(y=0.143, color='brown', label= 'RP & RP Anti', linestyle=':')
+    # WM
+    plt.axhline(y=0.5, color='blue', label= 'WM & WM Anti & WM Ctx1 & WM Ctx2', linestyle=':')
+
+    rt = fig.legend(title='Randomness threshold', bbox_to_anchor=(0.47, 0.4), fontsize=fs, labelspacing=0.3, loc=6, frameon=False)
+    plt.setp(rt.get_title(), fontsize=fs)
+
+    plt.show()
+
+
+model_dir = os.getcwd() + '/BeRNN_models/generalModel_200_train-err_validate-err/'
+rule = 'WM'
+# Plot activity of input, recurrent and output layer for one test trial
+easy_activity_plot_BeRNN(model_dir, rule)
+# Plot improvement of performance over iterating training steps
+plot_performanceprogress_BeRNN(model_dir)
