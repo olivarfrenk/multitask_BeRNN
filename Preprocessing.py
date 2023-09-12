@@ -1145,7 +1145,7 @@ def prepare_WM(file_location, sequence_on, sequence_off):
     # float all values on mod1 fields to their true value
     # co: We can increase the strength to maybe make it more easy for the network to distinguish between the different
     #  information encoded through activity strength (for mod1 and mod2);
-    #  also the decrease if stimuli will lead to the option of having greater distances between the decoded strenghts
+    #  also the decrease will lead to the option of having greater distances between the encoded strenghts
     mod1Dict = {
       '60_0': 0.08,
       '60_1': 0.17,
@@ -1429,7 +1429,7 @@ def fileDict(xlsxFolder, xlsxFolderList):
                   *file_dict['filesList_WMCtx2_easy'], *file_dict['filesList_WMCtx2_normal'], *file_dict['filesList_WMCtx2_hard']]
 
     # Append all tasks
-    AllTasks_list = [*AllDM_list, *AllEF_list, *AllRP_list, * AllWM_list]
+    AllTasks_list = [*AllDM_list, *AllEF_list, *AllRP_list, *AllWM_list]
 
     return AllTasks_list
 
