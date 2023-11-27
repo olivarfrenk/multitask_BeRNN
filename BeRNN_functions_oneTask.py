@@ -12,7 +12,7 @@ import tensorflow as tf
 
 from network import Model
 from collections import defaultdict
-from Preprocessing import prepare_DM, prepare_EF, prepare_RP, prepare_WM, fileDict
+from Preprocessing_error import prepare_DM, prepare_EF, prepare_RP, prepare_WM, fileDict
 # from Preprocessing_acc import prepare_WM_acc, prepare_DM_acc, prepare_EF_acc, prepare_RP_acc, fileDict_acc
 # Interactive mode for matplotlib will be activated which enables scientific computing (code batch execution)
 import matplotlib.pyplot as plt

@@ -24,7 +24,7 @@ def add_x_loc(x_loc, pref):
 # Preperation functions ################################################################################################
 
 # DM & DM Anti
-def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, file_location, sequence_on, sequence_off)
+def prepare_DM_error(file_location, sequence_on, sequence_off): # (model, loss_type, file_location, sequence_on, sequence_off)
     # For bug fixing
     # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_DM_easy_1100.xlsx', 0, 48
     # Open .xlsx and select necessary columns
@@ -78,8 +78,7 @@ def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, f
     # Prepare incrementation for trials between fixation events in df
     incrementList = []
     for i in range(0, len(df_selection)):
-        if df_selection['Component Name'][
-            i] == 'Fixation':  # Get all rows with that string as they start a trial sequence
+        if df_selection['Component Name'][i] == 'Fixation':  # Get all rows with that string as they start a trial sequence
             incrementList.append(i + 1)
 
     # Get average epoch time steps for the selected task in one session
@@ -326,14 +325,16 @@ def prepare_DM(file_location, sequence_on, sequence_off): # (model, loss_type, f
         # Sanity check
     print('Output solved: ', df['Spreadsheet'][0], ' ', df['TimeLimit'][0])
 
+    epochs = {'fix1': (None, numFixStepsAverage),
+                'go1': (numFixStepsAverage, None)}
 
     # Create c_mask
     # c_mask = add_c_mask_BeRNN(Output.shape[0], Output.shape[1], n_output, loss_type, numFixStepsAverage, numRespStepsAverage)
 
-    return Input, Output, y_loc    #, c_mask
+    return Input, Output, y_loc, epochs    #, c_mask
 
 # EF & EF Anti
-def prepare_EF(file_location, sequence_on, sequence_off):
+def prepare_EF_error(file_location, sequence_on, sequence_off):
     # For bug fixing
     # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_EF_normal_1100.xlsx', 0, 48
     # Open .xlsx and select necessary columns
@@ -639,10 +640,16 @@ def prepare_EF(file_location, sequence_on, sequence_off):
     # Sanity check
     print('Output solved: ', df['Spreadsheet'][0], ' ', df['TimeLimit'][0])
 
-    return Input, Output, y_loc
+    epochs = {'fix1': (None, numFixStepsAverage),
+              'go1': (numFixStepsAverage, None)}
+
+    # Create c_mask
+    # c_mask = add_c_mask_BeRNN(Output.shape[0], Output.shape[1], n_output, loss_type, numFixStepsAverage, numRespStepsAverage)
+
+    return Input, Output, y_loc, epochs  # , c_mask
 
 # RP & RP Anti & RP Ctx1 & RP Ctx2
-def prepare_RP(file_location, sequence_on, sequence_off):
+def prepare_RP_error(file_location, sequence_on, sequence_off):
     # For bug fixing
     # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_RP_Anti_easy_1100.xlsx', 0, 48
     # Open .xlsx and select necessary columns
@@ -972,12 +979,18 @@ def prepare_RP(file_location, sequence_on, sequence_off):
     # Sanity check
     print('Output solved: ', df['Spreadsheet'][0], ' ', df['TimeLimit'][0])
 
-    return Input, Output, y_loc
+    epochs = {'fix1': (None, numFixStepsAverage),
+              'go1': (numFixStepsAverage, None)}
+
+    # Create c_mask
+    # c_mask = add_c_mask_BeRNN(Output.shape[0], Output.shape[1], n_output, loss_type, numFixStepsAverage, numRespStepsAverage)
+
+    return Input, Output, y_loc, epochs  # , c_mask
 
 # WM & WM Anti & WM Ctx1 & WM Ctx2
-def prepare_WM(file_location, sequence_on, sequence_off):
+def prepare_WM_error(file_location, sequence_on, sequence_off):
     # For bug fixing
-    # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\SC\\7962396_WM_hard_1100.xlsx', 1, 48
+    # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_WM_Anti_hard_900.xlsx', 1, 48
     # Open .xlsx and select necessary columns
     # print(file_location)
     df = pd.read_excel(file_location, engine='openpyxl')
@@ -1359,7 +1372,13 @@ def prepare_WM(file_location, sequence_on, sequence_off):
     # Sanity check
     print('Output solved: ', df['Spreadsheet'][0], ' ', df['TimeLimit'][0])
 
-    return Input, Output, y_loc
+    epochs = {'fix1': (None, numFixStepsAverage),
+              'go1': (numFixStepsAverage, None)}
+
+    # Create c_mask
+    # c_mask = add_c_mask_BeRNN(Output.shape[0], Output.shape[1], n_output, loss_type, numFixStepsAverage, numRespStepsAverage)
+
+    return Input, Output, y_loc, epochs  # , c_mask
 
 
 ########################################################################################################################
@@ -1368,7 +1387,7 @@ def prepare_WM(file_location, sequence_on, sequence_off):
 # General .xlsx list
 xlsxFolderList = os.listdir(os.getcwd() + '/Data CSP/')
 
-def fileDict(xlsxFolder, xlsxFolderList):
+def fileDict_error(xlsxFolder):
     # Create file dictionary
     file_dict = dict()
     # Allocate lists for every task
@@ -1402,13 +1421,12 @@ def fileDict(xlsxFolder, xlsxFolderList):
 
     # Fill list for different task difficulties over all participants
     for j in file_dict:
-        # co: Change that again if you want to train data from all participants [1:7]
-        for i in xlsxFolderList[0:2]:
-            xlsxFileList = os.listdir(xlsxFolder + i)
-            # Fill all lists
-            for k in range(row_dict[j][0],row_dict[j][1]):
-                file_location = xlsxFolder + i + '/' + xlsxFileList[k]
-                file_dict[j].append(file_location)
+        # co: Change here if you want to have general models trained with data from all/several participants
+        xlsxFileList = os.listdir(xlsxFolder)
+        # Fill all lists
+        for k in range(row_dict[j][0],row_dict[j][1]):
+            file_location = xlsxFolder + '/' + xlsxFileList[k]
+            file_dict[j].append(file_location)
 
     # Create final lists
     # Append all DM

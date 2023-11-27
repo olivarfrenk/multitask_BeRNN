@@ -1,6 +1,6 @@
 import os
 import sys
-import json
+# import json
 import time
 # import errno
 import random
@@ -12,10 +12,9 @@ import tensorflow as tf
 
 from network import Model
 from collections import defaultdict
-from Preprocessing import prepare_DM, prepare_EF, prepare_RP, prepare_WM, fileDict
-from Preprocessing_acc import prepare_WM_acc, prepare_DM_acc, prepare_EF_acc, prepare_RP_acc, fileDict_acc
-# Interactive mode for matplotlib will be activated which enables scientific computing (code batch execution)
-import matplotlib.pyplot as plt
+import Tools
+from Preprocessing_error import prepare_DM_error, prepare_EF_error, prepare_RP_error, prepare_WM_error, fileDict_error
+# from Preprocessing_correct import prepare_WM_correct, prepare_DM_correct, prepare_EF_correct, prepare_RP_correct, fileDict_correct
 
 
 ########################################################################################################################
@@ -25,212 +24,10 @@ rules_dict = \
     {'BeRNN' :  ['DM', 'DM Anti', 'EF', 'EF Anti', 'RP', 'RP Anti', 'RP Ctx1',
                          'RP Ctx2', 'WM', 'WM Anti', 'WM Ctx1', 'WM Ctx2']}
 
-def get_num_ring_BeRNN(ruleset):
-    '''get number of stimulus rings'''
-    return 2
-
-def get_num_rule_BeRNN(ruleset):
-    '''get number of rules'''
-    return len(rules_dict[ruleset])
-
-def get_default_hp_BeRNN(ruleset):
-    '''Get a default hp.
-
-    Useful for debugging.
-
-    Returns:
-        hp : a dictionary containing training hpuration
-    '''
-    num_ring = get_num_ring_BeRNN(ruleset)
-    n_rule = get_num_rule_BeRNN(ruleset)
-
-    n_eachring = 32
-    n_input, n_output = 1+num_ring*n_eachring+n_rule, n_eachring+1
-    hp = {
-            # input type: normal, multi
-            'in_type': 'normal',
-            # Type of RNNs: LeakyRNN, LeakyGRU, EILeakyGRU, GRU, LSTM
-            'rnn_type': 'LeakyRNN',
-            # whether rule and stimulus inputs are represented separately
-            'use_separate_input': False,
-            # Type of loss functions
-            'loss_type': 'lsq',
-            # Optimizer
-            'optimizer': 'adam',
-            # Type of activation functions, relu, softplus, tanh, elu
-            'activation': 'relu',
-            # Time constant (ms)
-            'tau': 100,
-            # discretization time step (ms)
-            'dt': 20,
-            # discretization time step/time constant
-            'alpha': 0.2,
-            # recurrent noise
-            'sigma_rec': 0.05,
-            # input noise
-            'sigma_x': 0.01,
-            # leaky_rec weight initialization, diag, randortho, randgauss
-            'w_rec_init': 'randortho',
-            # a default weak regularization prevents instability
-            'l1_h': 0,
-            # l2 regularization on activity
-            'l2_h': 0,
-            # l1 regularization on weight
-            'l1_weight': 0,
-            # l2 regularization on weight
-            'l2_weight': 0,
-            # l2 regularization on deviation from initialization
-            'l2_weight_init': 0,
-            # proportion of weights to train, None or float between (0, 1)
-            'p_weight_train': None,
-            # number of units each ring
-            'n_eachring': n_eachring,
-            # number of rings
-            'num_ring': num_ring,
-            # number of rules
-            'n_rule': n_rule,
-            # first input index for rule units
-            'rule_start': 1+num_ring*n_eachring,
-            # number of input units
-            'n_input': n_input,
-            # number of output units
-            'n_output': n_output,
-            # number of recurrent units
-            'n_rnn': 256,
-            # random number used for several random initializations
-            'rng' : np.random.RandomState(seed=0),
-            # number of input units
-            'ruleset': ruleset,
-            # name to save
-            'save_name': 'test_model',
-            # learning rate
-            'learning_rate': 0.001,
-            # # intelligent synapses parameters, tuple (c, ksi)
-            # 'c_intsyn': 0,
-            # 'ksi_intsyn': 0,
-            }
-
-    return hp
-
-def save_hp_BeRNN(hp, model_dir):
-    """Save the hyper-parameter file of model save_name"""
-    hp_copy = hp.copy()
-    hp_copy.pop('rng')  # rng can not be serialized
-    with open(os.path.join(model_dir, 'hp.json'), 'w') as f:
-        json.dump(hp_copy, f)
-
-# def mkdir_p_BeRNN(path):
-#     """
-#     Portable mkdir -p
-#
-#     """
-#     try:
-#         os.makedirs(path)
-#     # except OSError as e:
-#     #     if e.errno == errno.EEXIST and os.path.isdir(path):
-#     #         pass
-#     #     else:
-#     #         raise
-
-def gen_feed_dict_BeRNN(model, Input, Output, hp):
-    """Generate feed_dict for session run."""
-    if hp['in_type'] == 'normal':
-        feed_dict = {model.x: Input,
-                     model.y: Output}
-    else:
-        raise ValueError()
-
-    return feed_dict
-
 
 ########################################################################################################################
 '''Network validation'''
 ########################################################################################################################
-def popvec_BeRNN(y):
-    """Population vector read out.
-
-    Assuming the last dimension is the dimension to be collapsed
-
-    Args:
-        y: population output on a ring network. Numpy array (Batch, Units)
-
-    Returns:
-        Readout locations: Numpy array (Batch,)
-    """
-    pref = np.arange(0, 2*np.pi, 2*np.pi/y.shape[-1])  # preferences
-    temp_sum = y.sum(axis=-1)
-    temp_cos = np.sum(y*np.cos(pref), axis=-1)/temp_sum
-    temp_sin = np.sum(y*np.sin(pref), axis=-1)/temp_sum
-    loc = np.arctan2(temp_sin, temp_cos)
-    return np.mod(loc, 2*np.pi)
-
-def get_perf_BeRNN(y_hat, y_loc):
-    """Get performance.
-
-    Args:
-      y_hat: Actual output. Numpy array (Time, Batch, Unit)
-      y_loc: Target output location (-1 for fixation).
-        Numpy array (Time, Batch)
-
-    Returns:
-      perf: Numpy array (Batch,)
-    """
-    if len(y_hat.shape) != 3:
-        raise ValueError('y_hat must have shape (Time, Batch, Unit)')
-    # Only look at last time points
-    y_loc = y_loc[-1]
-    y_hat = y_hat[-1]
-
-    # Fixation and location of y_hat
-    y_hat_fix = y_hat[..., 0]
-    y_hat_loc = popvec_BeRNN(y_hat[..., 1:])
-
-    # Fixating? Correctly saccading?
-    fixating = y_hat_fix > 0.5
-
-    original_dist = y_loc - y_hat_loc
-    dist = np.minimum(abs(original_dist), 2*np.pi-abs(original_dist))
-    corr_loc = dist < 0.2*np.pi
-
-    # Should fixate?
-    should_fix = y_loc < 0
-
-    # performance
-    perf = should_fix * fixating + (1-should_fix) * corr_loc * (1-fixating)
-    return perf
-
-def save_log_BeRNN(log):
-    """Save the log file of model."""
-    model_dir = log['model_dir']
-    fname = os.path.join(model_dir, 'log.json')
-    with open(fname, 'w') as f:
-        json.dump(log, f)
-
-def load_log_BeRNN(model_dir):
-    """Load the log file of model save_name"""
-    fname = os.path.join(model_dir, 'log.json')
-    if not os.path.isfile(fname):
-        return None
-
-    with open(fname, 'r') as f:
-        log = json.load(f)
-    return log
-
-def load_hp_BeRNN(model_dir):
-    """Load the hyper-parameter file of model save_name"""
-    fname = os.path.join(model_dir, 'hp.json')
-    if not os.path.isfile(fname):
-        fname = os.path.join(model_dir, 'hparams.json')  # backward compat
-        if not os.path.isfile(fname):
-            return None
-
-    with open(fname, 'r') as f:
-        hp = json.load(f)
-
-    # Use a different seed aftering loading,
-    # since loading is typically for analysis
-    hp['rng'] = np.random.RandomState(hp['seed']+1000)
-    return hp
 
 def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
     """Do evaluation.
@@ -289,16 +86,19 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
                 else:
                     currentRule = currentBatch.split('_')[2]
 
+            # todo: ####################################################################################################
+            # todo: ####################################################################################################
+            # co: It might be better to randomly draw the trials used for training and validation, as their might be more error in the last trials
             if currentBatch.split('_')[2] == 'DM':
-                Input, Output, y_loc = prepare_DM_acc(currentBatch, 48, 60)  # co: cmask problem: (model, hp['loss_type'], currentBatch, 0, 48)
+                Input, Output, y_loc = prepare_DM_error(currentBatch, 48, 60)  # co: cmask problem: (model, hp['loss_type'], currentBatch, 0, 48)
             elif currentBatch.split('_')[2] == 'EF':
-                Input, Output, y_loc = prepare_EF_acc(currentBatch, 48, 60)
+                Input, Output, y_loc = prepare_EF_error(currentBatch, 48, 60)
             elif currentBatch.split('_')[2] == 'RP':
-                Input, Output, y_loc = prepare_RP_acc(currentBatch, 48, 60)
+                Input, Output, y_loc = prepare_RP_error(currentBatch, 48, 60)
             elif currentBatch.split('_')[2] == 'WM':
-                Input, Output, y_loc = prepare_WM_acc(currentBatch, 48, 60)
+                Input, Output, y_loc = prepare_WM_error(currentBatch, 48, 60)
 
-            feed_dict = gen_feed_dict_BeRNN(model, Input, Output, hp)
+            feed_dict = Tools.gen_feed_dict_BeRNN(model, Input, Output, hp)
             c_lsq, c_reg, y_hat_test = sess.run(
                 [model.cost_lsq, model.cost_reg, model.y_hat],
                 feed_dict=feed_dict)
@@ -308,7 +108,7 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
             # Cost is first summed over time,
             # and averaged across batch and units
             # We did the averaging over time through c_mask
-            perf_test = np.mean(get_perf_BeRNN(y_hat_test, y_loc))
+            perf_test = np.mean(Tools.get_perf_BeRNN(y_hat_test, y_loc))
             clsq_tmp.append(c_lsq)
             creg_tmp.append(c_reg)
             perf_tmp.append(perf_test)
@@ -336,7 +136,7 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
 
     # Saving the model
     model.save()
-    save_log_BeRNN(log)
+    Tools.save_log_BeRNN(log)
 
     return log
 
@@ -346,7 +146,7 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
 ########################################################################################################################
 
 # co: ALL TASKS ########################################################################################################
-def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_trains=None, rule_prob_map=None, seed=0, load_dir=None, trainables=None):
+def train_BeRNN(model_dir, hp=None, display_step=None, ruleset='BeRNN', rule_trains=None, rule_prob_map=None, seed=0, load_dir=None, trainables=None):
     """Train the network.
 
     Args:
@@ -367,7 +167,7 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
     # mkdir_p_BeRNN(model_dir) # todo: create directory if not existing
 
     # Network parameters
-    default_hp = get_default_hp_BeRNN(ruleset)
+    default_hp = Tools.get_default_hp_BeRNN(ruleset)
     if hp is not None:
         default_hp.update(hp)
     hp = default_hp
@@ -394,7 +194,7 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
         # Set default as 1.
         rule_prob = np.array([rule_prob_map.get(r, 1.) for r in hp['rule_trains']])
         hp['rule_probs'] = list(rule_prob / np.sum(rule_prob))
-    save_hp_BeRNN(hp, model_dir)
+    Tools.save_hp_BeRNN(hp, model_dir)
 
     # Build the model
     model = Model(model_dir, hp=hp)         # todo: include self.cmask
@@ -409,11 +209,11 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
 
     # Record time
     t_start = time.time()
-
+    # todo: ############################################################################################################
+    # todo: ############################################################################################################
     # todo: Create taskList to generate trials from
-    xlsxFolder = os.getcwd() + '/Data MH/'
-    xlsxFolderList = os.listdir(os.getcwd() + '/Data MH/')
-    AllTasks_list = fileDict(xlsxFolder, xlsxFolderList)
+    xlsxFolder = os.getcwd() + '\\Data CSP\\MH\\'
+    AllTasks_list = fileDict_error(xlsxFolder)
     random_AllTasks_list = random.sample(AllTasks_list, len(AllTasks_list))
 
     with tf.Session() as sess:
@@ -461,32 +261,33 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
 
         batchNumber = 0
         # loop through all existing data several times
-        for i in range(500):
+        for i in range(200):
+            # Validation
+            log['trials'].append(i * 48 * 9)  # We have 108 .xlsx files and every time all of them are processed there are 48 trials * 9 files for each task fed to the network
+            log['times'].append(time.time() - t_start)
+            log = do_eval_BeRNN(sess, model, log, hp['rule_trains'], AllTasks_list)
+            print('TRAINING ##########################################################################')
+
             # loop through all existing data
             for step in range(len(random_AllTasks_list)): # * hp['batch_size_train'] <= max_steps:
                 currentBatch = random_AllTasks_list[step]
+                # currentBatch = random_AllTasks_list[1]
                 try:
-                    # Validation
-                    if step % display_step == 0:
-                        log['trials'].append(batchNumber*4)   # Average trials per batch fed to network on one task (48/12)
-                        log['times'].append(time.time() - t_start)
-                        log = do_eval_BeRNN(sess, model, log, hp['rule_trains'], AllTasks_list)
-                        print('TRAINING ##########################################################################')
-
                     # Count batches
                     batchNumber += 1
                     print('Batch #', batchNumber)
                     # Training
+                    # co: It might be better to randomly draw the trials used for training and validation, as their might be more error in the last trials
                     if currentBatch.split('_')[2] == 'DM':
-                        Input, Output, y_loc = prepare_DM(currentBatch, 0, 48) # co: cmask problem: (model, hp['loss_type'], currentBatch, 0, 48)
+                        Input, Output, y_loc, epochs = prepare_DM_error(currentBatch, 0, 48) # co: cmask problem: (model, hp['loss_type'], currentBatch, 0, 48)
                     elif currentBatch.split('_')[2] == 'EF':
-                        Input, Output, y_loc = prepare_EF(currentBatch, 0, 48)
+                        Input, Output, y_loc, epochs = prepare_EF_error(currentBatch, 0, 48)
                     elif currentBatch.split('_')[2] == 'RP':
-                        Input, Output, y_loc = prepare_RP(currentBatch, 0, 48)
+                        Input, Output, y_loc, epochs = prepare_RP_error(currentBatch, 0, 48)
                     elif currentBatch.split('_')[2] == 'WM':
-                        Input, Output, y_loc = prepare_WM(currentBatch, 0, 48)
+                        Input, Output, y_loc, epochs = prepare_WM_error(currentBatch, 0, 48)
                     # Generating feed_dict.
-                    feed_dict = gen_feed_dict_BeRNN(model, Input, Output, hp) # co: cmask problem: (model, Input, Output, c_mask, hp)
+                    feed_dict = Tools.gen_feed_dict_BeRNN(model, Input, Output, hp) # co: cmask problem: (model, Input, Output, c_mask, hp)
                     sess.run(model.train_step, feed_dict=feed_dict)
 
                 except BaseException as e:
@@ -496,178 +297,9 @@ def train_BeRNN(model_dir, hp=None, display_step = 250, ruleset='BeRNN', rule_tr
         # Saving the model
         model.save()
         print("Optimization finished!")
-# model_dir_BeRNN = os.getcwd() + '\\generalModel_BeRNN\\' # Very first model trained with all available CSP working group data
 
-# # Apply the network training
-# model_dir_BeRNN = os.getcwd() + '/BeRNN_models/MH_200_train-err_validate-err/'
-# train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=250, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
-
-
-########################################################################################################################
-'''Network analysis'''
-########################################################################################################################
-# Analysis functions
-_rule_color = {
-            'DM': 'green',
-            'DM Anti': 'olive',
-            'EF': 'forest green',
-            'EF Anti': 'mustard',
-            'RP': 'tan',
-            'RP Anti': 'brown',
-            'RP Ctx1': 'lavender',
-            'RP Ctx2': 'aqua',
-            'WM': 'bright purple',
-            'WM Anti': 'green blue',
-            'WM Ctx1': 'blue',
-            'WM Ctx2': 'indigo'
-            }
-
-rule_name = {
-            'DM': 'Decison Making',
-            'DM Anti': 'Decision Making Anti',
-            'EF': 'Executive Function',
-            'EF Anti': 'Executive Function Anti',
-            'RP': 'Relational Processing',
-            'RP Anti': 'Relational Processing Anti',
-            'RP Ctx1': 'Relational Processing Context 1',
-            'RP Ctx2': 'Relational Processing Context 2',
-            'WM': 'Working Memory',
-            'WM Anti': 'Working Memory Anti',
-            'WM Ctx1': 'Working Memory Context 1',
-            'WM Ctx2': 'Working Memory Context 2'
-            }
-
-rule_color = {k: 'xkcd:'+v for k, v in _rule_color.items()}
-
-def easy_activity_plot_BeRNN(model_dir, rule):
-    """A simple plot of neural activity from one task.
-
-    Args:
-        model_dir: directory where model file is saved
-        rule: string, the rule to plot
-    """
-
-    model = Model(model_dir)
-    hp = model.hp
-
-    xlsxFolder = os.getcwd() + '\\Data CSP\\'
-    xlsxFolderList = os.listdir(os.getcwd() + '\\Data CSP\\')
-    AllTasks_list = fileDict(xlsxFolder, xlsxFolderList)
-    random_AllTasks_list = random.sample(AllTasks_list, len(AllTasks_list))
-
-    with tf.Session() as sess:
-        model.restore()
-
-        currentRule = ' '
-        while currentRule != rule:
-            currentBatch = random.sample(AllTasks_list, 1)[0]
-            if len(currentBatch.split('_')) == 6:
-                currentRule = currentBatch.split('_')[2] + ' ' + currentBatch.split('_')[3]
-            else:
-                currentRule = currentBatch.split('_')[2]
-
-        if currentBatch.split('_')[2] == 'DM':
-            Input, Output, y_loc = prepare_DM(currentBatch, 48, 60)  # co: cmask problem: (model, hp['loss_type'], currentBatch, 0, 48)
-        elif currentBatch.split('_')[2] == 'EF':
-            Input, Output, y_loc = prepare_EF(currentBatch, 48, 60)
-        elif currentBatch.split('_')[2] == 'RP':
-            Input, Output, y_loc = prepare_RP(currentBatch, 48, 60)
-        elif currentBatch.split('_')[2] == 'WM':
-            Input, Output, y_loc = prepare_WM(currentBatch, 48, 60)
+# # # Apply the network training
+# model_dir_BeRNN = os.getcwd() + '\\BeRNN_models\\SC_200_train-error_validate-error\\'
+# train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=None, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
 
 
-        feed_dict = gen_feed_dict_BeRNN(model, Input, Output, hp)
-        h, y_hat = sess.run([model.h, model.y_hat], feed_dict=feed_dict)
-        # All matrices have shape (n_time, n_condition, n_neuron)
-
-    # Take only the one example trial
-    i_trial = 10
-
-    for activity, title in zip([Input, h, y_hat],
-                               ['input', 'recurrent', 'output']):
-        plt.figure()
-        plt.imshow(activity[:,i_trial,:].T, aspect='auto', cmap='hot',      # np.uint8
-                   interpolation='none', origin='lower')
-        plt.title(title)
-        plt.colorbar()
-        plt.show()
-
-def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
-    # Plot Training Progress
-    log = load_log_BeRNN(model_dir)
-    hp = load_hp_BeRNN(model_dir)
-
-    # co: add [::2] if you want to have only every second validation value
-    trials = log['trials'][::10]
-
-    fs = 18 # fontsize
-    fig = plt.figure(figsize=(3.5,1.2))
-    ax = fig.add_axes([0.1,0.25,0.8,0.6]) # co: third value influences length of cartoon
-    lines = list()
-    labels = list()
-
-    x_plot = np.array(trials)
-    if rule_plot == None:
-        rule_plot = hp['rules']
-
-    for i, rule in enumerate(rule_plot):
-        # line = ax1.plot(x_plot, np.log10(cost_tests[rule]),color=color_rules[i%26])
-        # ax2.plot(x_plot, perf_tests[rule],color=color_rules[i%26])
-        # co: add [::2] if you want to have only every second validation value
-        line = ax.plot(x_plot, np.log10(log['cost_' + 'WM'][::10]),
-                       color=rule_color[rule])
-        # co: add [::2] if you want to have only every second validation value
-        ax.plot(x_plot, log['perf_' + rule][::10], color=rule_color[rule])
-        lines.append(line[0])
-        labels.append(rule_name[rule])
-
-    ax.tick_params(axis='both', which='major', labelsize=fs)
-
-    ax.set_ylim([0, 1])
-    ax.set_xlabel('Trials per task',fontsize=fs, labelpad=2)
-    ax.set_ylabel('Performance',fontsize=fs, labelpad=0)
-    ax.locator_params(axis='x', nbins=3)
-    ax.set_yticks([0,1])
-    ax.spines["right"].set_visible(False)
-    ax.spines["top"].set_visible(False)
-    ax.xaxis.set_ticks_position('bottom')
-    ax.yaxis.set_ticks_position('left')
-    # lg = fig.legend(lines, labels, title='Task',ncol=2,bbox_to_anchor=(0.47,0.65),
-    #                 fontsize=fs,labelspacing=0.3,loc=6,frameon=False)
-    # plt.setp(lg.get_title(),fontsize=fs)
-    # # Add the randomness thresholds
-    # DM & RP Ctx
-    # plt.axhline(y=0.2, color='green', label= 'DM & DM Anti & RP Ctx1 & RP Ctx2', linestyle=':')
-    plt.axhline(y=0.2, color='green', linestyle=':')
-    # EF
-    # plt.axhline(y=0.25, color='black', label= 'EF & EF Anti', linestyle=':')
-    plt.axhline(y=0.25, color='black', linestyle=':')
-    # RP
-    # plt.axhline(y=0.143, color='brown', label= 'RP & RP Anti', linestyle=':')
-    plt.axhline(y=0.143, color='brown', linestyle=':')
-    # WM
-    # plt.axhline(y=0.5, color='blue', label= 'WM & WM Anti & WM Ctx1 & WM Ctx2', linestyle=':')
-    plt.axhline(y=0.5, color='blue', linestyle=':')
-    #
-    # rt = fig.legend(title='Randomness threshold', bbox_to_anchor=(0.47, 0.4), fontsize=fs, labelspacing=0.3, loc=6, frameon=False)
-    # plt.setp(rt.get_title(), fontsize=fs)
-
-    plt.show()
-
-
-model_dir = os.getcwd() + '/BeRNN_models/generalModel_200_train-err_validate-acc/'
-rule = 'WM'
-# Plot activity of input, recurrent and output layer for one test trial
-easy_activity_plot_BeRNN(model_dir, rule)
-# Plot improvement of performance over iterating training steps
-plot_performanceprogress_BeRNN(model_dir)
-
-
-########################################################################################################################
-## LAB #################################################################################################################
-########################################################################################################################
-
-# todo: Preprocess and store data before training
-# todo: Allow different sequence lengths
-# todo: Create dataFrames for general and individual models
-# todo: Add c-mask and do hyperparameter search

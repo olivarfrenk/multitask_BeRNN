@@ -7,16 +7,17 @@ from __future__ import division
 
 import os
 import numpy as np
-import pickle
+import random
+# import pickle
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
 
 # from task import rule_name
-from Network_Analysis import rule_name
 from network import Model
-from BeRNN_functions_multiTask import load_hp_BeRNN
-from Tools import load_pickle_BeRNN
+from Preprocessing_error import prepare_DM_error, prepare_EF_error, prepare_RP_error, prepare_WM_error, fileDict_error
+import Tools
+from Tools import load_hp_BeRNN, load_pickle_BeRNN
 
 # Colors used for clusters
 kelly_colors = \
@@ -43,9 +44,144 @@ kelly_colors = \
  np.array([ 0.88627451,  0.34509804,  0.13333333]),
  np.array([ 0.16862745,  0.23921569,  0.14901961])]
 
+# rule_name = {
+#             'DM': 'Decison Making (DM)',
+#             'DM Anti': 'Decision Making Anti (DM Anti)',
+#             'EF': 'Executive Function (EF)',
+#             'EF Anti': 'Executive Function Anti (EF Anti)',
+#             'RP': 'Relational Processing (RP)',
+#             'RP Anti': 'Relational Processing Anti (RP Anti)',
+#             'RP Ctx1': 'Relational Processing Context 1 (RP Ctx1)',
+#             'RP Ctx2': 'Relational Processing Context 2 (RP Ctx2)',
+#             'WM': 'Working Memory (WM)',
+#             'WM Anti': 'Working Memory Anti (WM Anti)',
+#             'WM Ctx1': 'Working Memory Context 1 (WM Ctx1)',
+#             'WM Ctx2': 'Working Memory Context 2 (WM Ctx2)'
+#             }
+
+rule_name = {
+            'DM': 'DM',
+            'DM Anti': 'DM Anti',
+            'EF': 'EF',
+            'EF Anti': 'EF Anti',
+            'RP': 'RP',
+            'RP Anti': 'RP Anti',
+            'RP Ctx1': 'RP Ctx1',
+            'RP Ctx2': 'RP Ctx2',
+            'WM': 'WM',
+            'WM Anti': 'WM Anti',
+            'WM Ctx1': 'WM Ctx1',
+            'WM Ctx2': 'WM Ctx2'
+            }
 
 save = False
 
+def pretty_singleneuron_plot(model_dir,rules,neurons,epoch=None,save=False,ylabel_firstonly=True,trace_only=False,plot_stim_avg=False,save_name=''):
+    """Plot the activity of a single neuron in time across many trials
+
+    Args:
+        model_dir:
+        rules: rules to plot
+        neurons: indices of neurons to plot
+        epoch: epoch to plot
+        save: save figure?
+        ylabel_firstonly: if True, only plot ylabel for the first rule in rules
+    """
+
+    if isinstance(rules, str):
+        rules = [rules]
+
+    try:
+        _ = iter(neurons)
+    except TypeError:
+        neurons = [neurons]
+
+    h_tests = dict()
+    model = Model(model_dir)
+    hp = model.hp
+    with tf.Session() as sess:
+        model.restore()
+
+        # todo: Create taskList to generate trials from ################################################################
+        # co: If you want to test a general model: Put all relevant .xlsx files in one folder so that the pipeline still works
+        xlsxFolder = os.getcwd() + '\\Data CSP\\MH\\'
+        AllTasks_list = fileDict_error(xlsxFolder)
+        random_AllTasks_list = random.sample(AllTasks_list, len(AllTasks_list))
+
+        t_start = int(500 / hp['dt'])
+
+        for rule in rules:
+            currentRule = ' '
+            while currentRule != rule:
+                currentBatch = random.sample(random_AllTasks_list, 1)[0]
+                if len(currentBatch.split('_')) == 6:
+                    currentRule = currentBatch.split('_')[2] + ' ' + currentBatch.split('_')[3]
+                else:
+                    currentRule = currentBatch.split('_')[2]
+
+            if currentBatch.split('_')[2] == 'DM':
+                Input, Output, y_loc, epochs = prepare_DM_error(currentBatch, 48, 60)  # co: cmask problem: (model, hp['loss_type'], currentBatch, 0, 48)
+            elif currentBatch.split('_')[2] == 'EF':
+                Input, Output, y_loc, epochs = prepare_EF_error(currentBatch, 48, 60)
+            elif currentBatch.split('_')[2] == 'RP':
+                Input, Output, y_loc, epochs = prepare_RP_error(currentBatch, 48, 60)
+            elif currentBatch.split('_')[2] == 'WM':
+                Input, Output, y_loc, epochs = prepare_WM_error(currentBatch, 48, 60)
+
+            feed_dict = Tools.gen_feed_dict_BeRNN(model, Input, Output, hp)
+            h, y_hat = sess.run([model.h, model.y_hat], feed_dict=feed_dict)
+
+    for neuron in neurons:
+        h_max = np.max([h_tests[r][t_start:, :, neuron].max() for r in rules])
+        for j, rule in enumerate(rules):
+            fs = 6
+            fig = plt.figure(figsize=(1.0, 0.8))
+            ax = fig.add_axes([0.35, 0.25, 0.55, 0.55])
+            t_plot = np.arange(h_tests[rule][t_start:].shape[0]) * hp['dt'] / 1000
+            _ = ax.plot(t_plot, h_tests[rule][t_start:, :, neuron], lw=0.5, color='gray')
+
+            if plot_stim_avg:
+                # Plot stimulus averaged trace
+                _ = ax.plot(np.arange(h_tests[rule][t_start:].shape[0]) * hp['dt'] / 1000,
+                            h_tests[rule][t_start:, :, neuron].mean(axis=1), lw=1, color='black')
+
+            if epoch is not None:
+                e0, e1 = epochs[epoch]
+                e0 = e0 if e0 is not None else 0
+                e1 = e1 if e1 is not None else h_tests[rule].shape[0]
+                ax.plot([e0, e1], [h_max * 1.15] * 2,
+                        color='black', linewidth=1.5)
+                figname = 'figure/trace_' + rule_name[rule] + epoch + save_name + '.pdf'
+            else:
+                figname = 'figure/trace_unit' + str(neuron) + rule_name[rule] + save_name + '.pdf'
+
+            plt.ylim(np.array([-0.1, 1.2]) * h_max)
+            plt.xticks([0, 1.5])
+            plt.xlabel('Time (s)', fontsize=fs, labelpad=-5)
+            plt.locator_params(axis='y', nbins=4)
+            if j > 0 and ylabel_firstonly:
+                ax.set_yticklabels([])
+            else:
+                plt.ylabel('Activitity (a.u.)', fontsize=fs, labelpad=2)
+            plt.title('Unit {:d} '.format(neuron) + rule_name[rule], fontsize=5)
+            ax.tick_params(axis='both', which='major', labelsize=fs)
+            ax.spines["right"].set_visible(False)
+            ax.spines["top"].set_visible(False)
+            ax.xaxis.set_ticks_position('bottom')
+            ax.yaxis.set_ticks_position('left')
+            if trace_only:
+                ax.spines["left"].set_visible(False)
+                ax.spines["bottom"].set_visible(False)
+                ax.xaxis.set_ticks_position('none')
+                ax.set_xlabel('')
+                ax.set_ylabel('')
+                ax.set_xticks([])
+                ax.set_yticks([])
+                ax.set_title('')
+
+            if save:
+                plt.savefig(figname, transparent=True)
+            plt.show()
 
 class Analysis(object):
     def __init__(self, model_dir, data_type, normalization_method='max'):
@@ -205,7 +341,7 @@ class Analysis(object):
             rect_color = [0.25, 0.15, 0.6, 0.05]
             rect_cb = [0.87, 0.2, 0.03, 0.7]
             tick_names = [rule_name[r] for r in self.rules]
-            fs = 6
+            fs = 18
             labelpad = 13
         elif self.data_type == 'epoch':
             figsize = (3.5,4.5)
@@ -213,7 +349,7 @@ class Analysis(object):
             rect_color = [0.25, 0.05, 0.6, 0.05]
             rect_cb = [0.87, 0.1, 0.03, 0.85]
             tick_names = [rule_name[key[0]]+' '+key[1] for key in self.keys]
-            fs = 5
+            fs = 12
             labelpad = 20
         else:
             raise ValueError
@@ -228,8 +364,8 @@ class Analysis(object):
         plt.yticks(range(len(tick_names)), tick_names,
                    rotation=0, va='center', fontsize=fs)
         plt.xticks([])
-        plt.title('Units', fontsize=7, y=0.97)
-        plt.xlabel('Clusters', fontsize=7, labelpad=labelpad)
+        # plt.title('Units', fontsize=7, y=0.97)
+        # plt.xlabel('Clusters', fontsize=7, labelpad=labelpad)
         ax.tick_params('both', length=0)
         for loc in ['bottom','top','left','right']:
             ax.spines[loc].set_visible(False)
@@ -243,8 +379,8 @@ class Analysis(object):
         elif self.normalization_method == 'none':
             clabel = 'Variance'
 
-        cb.set_label(clabel, fontsize=7, labelpad=0)
-        plt.tick_params(axis='both', which='major', labelsize=7)
+        cb.set_label(clabel, fontsize=18, labelpad=0)
+        plt.tick_params(axis='both', which='major', labelsize=12)
 
 
         # Plot color bars indicating clustering
@@ -254,7 +390,7 @@ class Analysis(object):
                 ind_l = np.where(labels==l)[0][[0, -1]]+np.array([0,1])
                 ax.plot(ind_l, [0,0], linewidth=4, solid_capstyle='butt',
                         color=kelly_colors[il+1])
-                ax.text(np.mean(ind_l), -0.5, str(il+1), fontsize=6,
+                ax.text(np.mean(ind_l), -0.5, str(il+1), fontsize=12,
                         ha='center', va='top', color=kelly_colors[il+1])
             ax.set_xlim([0, len(labels)])
             ax.set_ylim([-1, 1])
@@ -301,7 +437,7 @@ class Analysis(object):
             plt.savefig('figure/feature_similarity_by'+self.data_type+'.pdf', transparent=True)
         plt.show()
 
-    def plot_2Dvisualization(self, method='TSNE'):
+    def plot_2Dvisualization(self, method='tSNE'):
         labels = self.labels
         ######################## Plotting 2-D visualization of variance map ###########
         from sklearn.manifold import TSNE, MDS, LocallyLinearEmbedding
@@ -327,7 +463,7 @@ class Analysis(object):
             ind_l = np.where(labels==l)[0]
             ax.scatter(Y[ind_l, 0], Y[ind_l, 1], color=kelly_colors[il+1], s=10)
         ax.axis('off')
-        plt.title(method, fontsize=7)
+        plt.title(method, fontsize=18)
         figname = 'figure/taskvar_visual_by'+method+self.data_type+'.pdf'
         if save:
             plt.savefig(figname, transparent=True)
@@ -362,7 +498,7 @@ class Analysis(object):
                 plt.savefig('figure/exampleunit_variance.pdf', transparent=True)
             plt.show()
 
-            from Network_Analysis import pretty_singleneuron_plot
+            # from Network_Analysis import pretty_singleneuron_plot
             # Plot single example neuron in time
             pretty_singleneuron_plot(self.model_dir, ['fdgo'], [self.ind_active[ind]], epoch=None, save=save, ylabel_firstonly=True)
 

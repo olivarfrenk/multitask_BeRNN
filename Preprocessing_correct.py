@@ -25,7 +25,7 @@ def add_x_loc(x_loc, pref):
 # Preperation functions ################################################################################################
 
 # DM & DM Anti
-def prepare_DM_acc(file_location, sequence_on, sequence_off): # (model, loss_type, file_location, sequence_on, sequence_off)
+def prepare_DM_correct(file_location, sequence_on, sequence_off): # (model, loss_type, file_location, sequence_on, sequence_off)
     # For bug fixing
     # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_DM_easy_1100.xlsx', 0, 48
     # Open .xlsx and select necessary columns
@@ -334,7 +334,7 @@ def prepare_DM_acc(file_location, sequence_on, sequence_off): # (model, loss_typ
     return Input, Output, y_loc    #, c_mask
 
 # EF & EF Anti
-def prepare_EF_acc(file_location, sequence_on, sequence_off):
+def prepare_EF_correct(file_location, sequence_on, sequence_off):
     # For bug fixing
     # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_EF_normal_1100.xlsx', 0, 48
     # Open .xlsx and select necessary columns
@@ -643,7 +643,7 @@ def prepare_EF_acc(file_location, sequence_on, sequence_off):
     return Input, Output, y_loc
 
 # RP & RP Anti & RP Ctx1 & RP Ctx2
-def prepare_RP_acc(file_location, sequence_on, sequence_off):
+def prepare_RP_correct(file_location, sequence_on, sequence_off):
     # For bug fixing
     # file_location, sequence_on, sequence_off = os.getcwd() + '/Data CSP/SC/7962396_RP_normal_900.xlsx', 0, 48
     # Open .xlsx and select necessary columns
@@ -985,7 +985,7 @@ def prepare_RP_acc(file_location, sequence_on, sequence_off):
     return Input, Output, y_loc
 
 # WM & WM Anti & WM Ctx1 & WM Ctx2
-def prepare_WM_acc(file_location, sequence_on, sequence_off):
+def prepare_WM_correct(file_location, sequence_on, sequence_off):
     # For bug fixing
     # file_location, sequence_on, sequence_off = os.getcwd() + '/Data CSP/SC/7962396_WM_hard_900.xlsx', 1 ,48
     # Open .xlsx and select necessary columns
@@ -1329,7 +1329,7 @@ def prepare_WM_acc(file_location, sequence_on, sequence_off):
 # General .xlsx list
 xlsxFolderList = os.listdir(os.getcwd() + '/Data CSP/')
 
-def fileDict_acc(xlsxFolder, xlsxFolderList):
+def fileDict_correct(xlsxFolder, xlsxFolderList):
     # Create file dictionary
     file_dict = dict()
     # Allocate lists for every task
@@ -1363,13 +1363,12 @@ def fileDict_acc(xlsxFolder, xlsxFolderList):
 
     # Fill list for different task difficulties over all participants
     for j in file_dict:
-        # co: Change that again if you want to train data from all participants [1:7]
-        for i in xlsxFolderList[0:2]:
-            xlsxFileList = os.listdir(xlsxFolder + i)
-            # Fill all lists
-            for k in range(row_dict[j][0],row_dict[j][1]):
-                file_location = xlsxFolder + i + '/' + xlsxFileList[k]
-                file_dict[j].append(file_location)
+        # co: Change here if you want to have general models trained with data from all/several participants
+        xlsxFileList = os.listdir(xlsxFolder)
+        # Fill all lists
+        for k in range(row_dict[j][0],row_dict[j][1]):
+            file_location = xlsxFolder + '/' + xlsxFileList[k]
+            file_dict[j].append(file_location)
 
     # Create final lists
     # Append all DM
