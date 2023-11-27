@@ -12,9 +12,11 @@ import matplotlib.pyplot as plt
 
 import tensorflow as tf
 
-from task import rule_name
+# from task import rule_name
+from Network_Analysis import rule_name
 from network import Model
-import tools
+from BeRNN_functions_multiTask import load_hp_BeRNN
+from Tools import load_pickle_BeRNN
 
 # Colors used for clusters
 kelly_colors = \
@@ -42,16 +44,16 @@ kelly_colors = \
  np.array([ 0.16862745,  0.23921569,  0.14901961])]
 
 
-save = True
+save = False
 
 
 class Analysis(object):
     def __init__(self, model_dir, data_type, normalization_method='max'):
-        hp = tools.load_hp(model_dir)
+        hp = load_hp_BeRNN(model_dir)
 
         # If not computed, use variance.py
         fname = os.path.join(model_dir, 'variance_' + data_type + '.pkl')
-        res = tools.load_pickle(fname)
+        res = load_pickle_BeRNN(fname)
         h_var_all_ = res['h_var_all']
         self.keys  = res['keys']
 
@@ -243,7 +245,7 @@ class Analysis(object):
 
         cb.set_label(clabel, fontsize=7, labelpad=0)
         plt.tick_params(axis='both', which='major', labelsize=7)
-        
+
 
         # Plot color bars indicating clustering
         if True:
@@ -360,11 +362,10 @@ class Analysis(object):
                 plt.savefig('figure/exampleunit_variance.pdf', transparent=True)
             plt.show()
 
-            from analysis.standard_analysis import pretty_singleneuron_plot
+            from Network_Analysis import pretty_singleneuron_plot
             # Plot single example neuron in time
-            pretty_singleneuron_plot(self.model_dir, ['fdgo'], [self.ind_active[ind]],
-                                     epoch=None, save=save, ylabel_firstonly=True)
-            
+            pretty_singleneuron_plot(self.model_dir, ['fdgo'], [self.ind_active[ind]], epoch=None, save=save, ylabel_firstonly=True)
+
     def plot_connectivity_byclusters(self):
         """Plot connectivity of the model"""
 
@@ -455,122 +456,122 @@ class Analysis(object):
             plt.savefig('figure/connectivity_by'+self.data_type+'.pdf', transparent=True)
         plt.show()
 
-    def lesions(self):
-        labels = self.labels
+    # def lesions(self):
+    #     labels = self.labels
+    #
+    #     from network import get_perf
+    #     # from task import generate_trials
+    #
+    #     # The first will be the intact network
+    #     lesion_units_list = [None]
+    #     for il, l in enumerate(self.unique_labels):
+    #         ind_l = np.where(labels == l)[0]
+    #         # In original indices
+    #         lesion_units_list += [self.ind_active[ind_l]]
+    #
+    #     perfs_store_list = list()
+    #     perfs_changes = list()
+    #     cost_store_list = list()
+    #     cost_changes = list()
+    #
+    #     for i, lesion_units in enumerate(lesion_units_list):
+    #         model = Model(self.model_dir)
+    #         hp = model.hp
+    #         with tf.Session() as sess:
+    #             model.restore()
+    #             model.lesion_units(sess, lesion_units)
+    #
+    #             perfs_store = list()
+    #             cost_store = list()
+    #             for rule in self.rules:
+    #                 n_rep = 16
+    #                 batch_size_test = 256
+    #                 batch_size_test_rep = int(batch_size_test / n_rep)
+    #                 clsq_tmp = list()
+    #                 perf_tmp = list()
+    #                 for i_rep in range(n_rep):
+    #                     trial = generate_trials(rule, hp, 'random',
+    #                                             batch_size=batch_size_test_rep)
+    #                     feed_dict = tools.gen_feed_dict(model, trial, hp)
+    #                     y_hat_test, c_lsq = sess.run(
+    #                         [model.y_hat, model.cost_lsq], feed_dict=feed_dict)
+    #
+    #                     # Cost is first summed over time, and averaged across batch and units
+    #                     # We did the averaging over time through c_mask
+    #
+    #                     # IMPORTANT CHANGES: take overall mean
+    #                     perf_test = np.mean(get_perf(y_hat_test, trial.y_loc))
+    #                     clsq_tmp.append(c_lsq)
+    #                     perf_tmp.append(perf_test)
+    #
+    #                 perfs_store.append(np.mean(perf_tmp))
+    #                 cost_store.append(np.mean(clsq_tmp))
+    #
+    #         perfs_store = np.array(perfs_store)
+    #         cost_store = np.array(cost_store)
+    #
+    #         perfs_store_list.append(perfs_store)
+    #         cost_store_list.append(cost_store)
+    #
+    #         if i > 0:
+    #             perfs_changes.append(perfs_store - perfs_store_list[0])
+    #             cost_changes.append(cost_store - cost_store_list[0])
+    #
+    #     perfs_changes = np.array(perfs_changes)
+    #     cost_changes = np.array(cost_changes)
+    #
+    #     return perfs_changes, cost_changes
 
-        from network import get_perf
-        from task import generate_trials
-
-        # The first will be the intact network
-        lesion_units_list = [None]
-        for il, l in enumerate(self.unique_labels):
-            ind_l = np.where(labels == l)[0]
-            # In original indices
-            lesion_units_list += [self.ind_active[ind_l]]
-
-        perfs_store_list = list()
-        perfs_changes = list()
-        cost_store_list = list()
-        cost_changes = list()
-
-        for i, lesion_units in enumerate(lesion_units_list):
-            model = Model(self.model_dir)
-            hp = model.hp
-            with tf.Session() as sess:
-                model.restore()
-                model.lesion_units(sess, lesion_units)
-
-                perfs_store = list()
-                cost_store = list()
-                for rule in self.rules:
-                    n_rep = 16
-                    batch_size_test = 256
-                    batch_size_test_rep = int(batch_size_test / n_rep)
-                    clsq_tmp = list()
-                    perf_tmp = list()
-                    for i_rep in range(n_rep):
-                        trial = generate_trials(rule, hp, 'random',
-                                                batch_size=batch_size_test_rep)
-                        feed_dict = tools.gen_feed_dict(model, trial, hp)
-                        y_hat_test, c_lsq = sess.run(
-                            [model.y_hat, model.cost_lsq], feed_dict=feed_dict)
-
-                        # Cost is first summed over time, and averaged across batch and units
-                        # We did the averaging over time through c_mask
-
-                        # IMPORTANT CHANGES: take overall mean
-                        perf_test = np.mean(get_perf(y_hat_test, trial.y_loc))
-                        clsq_tmp.append(c_lsq)
-                        perf_tmp.append(perf_test)
-
-                    perfs_store.append(np.mean(perf_tmp))
-                    cost_store.append(np.mean(clsq_tmp))
-
-            perfs_store = np.array(perfs_store)
-            cost_store = np.array(cost_store)
-
-            perfs_store_list.append(perfs_store)
-            cost_store_list.append(cost_store)
-
-            if i > 0:
-                perfs_changes.append(perfs_store - perfs_store_list[0])
-                cost_changes.append(cost_store - cost_store_list[0])
-
-        perfs_changes = np.array(perfs_changes)
-        cost_changes = np.array(cost_changes)
-
-        return perfs_changes, cost_changes
-
-    def plot_lesions(self):
-        """Lesion individual cluster and show performance."""
-
-        perfs_changes, cost_changes = self.lesions()
-
-        cb_labels = ['Performance change after lesioning',
-                     'Cost change after lesioning']
-        vmins = [-0.5, -0.5]
-        vmaxs = [+0.5, +0.5]
-        ticks = [[-0.5,0.5], [-0.5, 0.5]]
-        changes_plot = [perfs_changes, cost_changes]
-
-        fs = 6
-        figsize = (2.5,2.5)
-        rect = [0.3, 0.2, 0.5, 0.7]
-        rect_cb = [0.82, 0.2, 0.03, 0.7]
-        rect_color = [0.3, 0.15, 0.5, 0.05]
-        for i in range(2):
-            fig = plt.figure(figsize=figsize)
-            ax = fig.add_axes(rect)
-            im = ax.imshow(changes_plot[i].T, cmap='coolwarm', aspect='auto',
-                           interpolation='nearest', vmin=vmins[i], vmax=vmaxs[i])
-
-            tick_names = [rule_name[r] for r in self.rules]
-            _ = plt.yticks(range(len(tick_names)), tick_names,
-                       rotation=0, va='center', fontsize=fs)
-            plt.xticks([])
-            plt.xlabel('Clusters', fontsize=7, labelpad=13)
-            ax.tick_params('both', length=0)
-            for loc in ['bottom','top','left','right']:
-                ax.spines[loc].set_visible(False)
-
-            ax = fig.add_axes(rect_cb)
-            cb = plt.colorbar(im, cax=ax, ticks=ticks[i])
-            cb.outline.set_linewidth(0.5)
-            cb.set_label(cb_labels[i], fontsize=7, labelpad=-10)
-            plt.tick_params(axis='both', which='major', labelsize=7)
-
-            ax = fig.add_axes(rect_color)
-            for il, l in enumerate(self.unique_labels):
-                ax.plot([il, il+1], [0,0], linewidth=4, solid_capstyle='butt',
-                        color=kelly_colors[il+1])
-                ax.text(np.mean(il+0.5), -0.5, str(il+1), fontsize=6,
-                        ha='center', va='top', color=kelly_colors[il+1])
-            ax.set_xlim([0, len(self.unique_labels)])
-            ax.set_ylim([-1, 1])
-            ax.axis('off')
-
-            if save:
-                plt.savefig('figure/lesion_cluster_by'+self.data_type+'_{:d}.pdf'.format(i), transparent=True)
+    # def plot_lesions(self):
+    #     """Lesion individual cluster and show performance."""
+    #
+    #     perfs_changes, cost_changes = self.lesions()
+    #
+    #     cb_labels = ['Performance change after lesioning',
+    #                  'Cost change after lesioning']
+    #     vmins = [-0.5, -0.5]
+    #     vmaxs = [+0.5, +0.5]
+    #     ticks = [[-0.5,0.5], [-0.5, 0.5]]
+    #     changes_plot = [perfs_changes, cost_changes]
+    #
+    #     fs = 6
+    #     figsize = (2.5,2.5)
+    #     rect = [0.3, 0.2, 0.5, 0.7]
+    #     rect_cb = [0.82, 0.2, 0.03, 0.7]
+    #     rect_color = [0.3, 0.15, 0.5, 0.05]
+    #     for i in range(2):
+    #         fig = plt.figure(figsize=figsize)
+    #         ax = fig.add_axes(rect)
+    #         im = ax.imshow(changes_plot[i].T, cmap='coolwarm', aspect='auto',
+    #                        interpolation='nearest', vmin=vmins[i], vmax=vmaxs[i])
+    #
+    #         tick_names = [rule_name[r] for r in self.rules]
+    #         _ = plt.yticks(range(len(tick_names)), tick_names,
+    #                    rotation=0, va='center', fontsize=fs)
+    #         plt.xticks([])
+    #         plt.xlabel('Clusters', fontsize=7, labelpad=13)
+    #         ax.tick_params('both', length=0)
+    #         for loc in ['bottom','top','left','right']:
+    #             ax.spines[loc].set_visible(False)
+    #
+    #         ax = fig.add_axes(rect_cb)
+    #         cb = plt.colorbar(im, cax=ax, ticks=ticks[i])
+    #         cb.outline.set_linewidth(0.5)
+    #         cb.set_label(cb_labels[i], fontsize=7, labelpad=-10)
+    #         plt.tick_params(axis='both', which='major', labelsize=7)
+    #
+    #         ax = fig.add_axes(rect_color)
+    #         for il, l in enumerate(self.unique_labels):
+    #             ax.plot([il, il+1], [0,0], linewidth=4, solid_capstyle='butt',
+    #                     color=kelly_colors[il+1])
+    #             ax.text(np.mean(il+0.5), -0.5, str(il+1), fontsize=6,
+    #                     ha='center', va='top', color=kelly_colors[il+1])
+    #         ax.set_xlim([0, len(self.unique_labels)])
+    #         ax.set_ylim([-1, 1])
+    #         ax.axis('off')
+    #
+    #         if save:
+    #             plt.savefig('figure/lesion_cluster_by'+self.data_type+'_{:d}.pdf'.format(i), transparent=True)
 
 if __name__ == '__main__':
     root_dir = './data/train_all'

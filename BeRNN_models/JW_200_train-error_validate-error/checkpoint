@@ -1,0 +1,2 @@
+model_checkpoint_path: "/pandora/home/oliver.frank/Desktop/multitask_BeRNN-main/BeRNN_models/JW_200_train-error_validate-error/model.ckpt"
+all_model_checkpoint_paths: "/pandora/home/oliver.frank/Desktop/multitask_BeRNN-main/BeRNN_models/JW_200_train-error_validate-error/model.ckpt"
