@@ -1,2 +1,0 @@
-model_checkpoint_path: "/pandora/home/oliver.frank/Desktop/multitask_BeRNN-main/BeRNN_models/MH_500_train-err_validate-acc/model.ckpt"
-all_model_checkpoint_paths: "/pandora/home/oliver.frank/Desktop/multitask_BeRNN-main/BeRNN_models/MH_500_train-err_validate-acc/model.ckpt"

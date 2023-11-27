@@ -1,2 +1,0 @@
-model_checkpoint_path: "/pandora/home/oliver.frank/Desktop/multitask_BeRNN/BeRNN_models/MH_CSP_20_WM_pan/model.ckpt"
-all_model_checkpoint_paths: "/pandora/home/oliver.frank/Desktop/multitask_BeRNN/BeRNN_models/MH_CSP_20_WM_pan/model.ckpt"
