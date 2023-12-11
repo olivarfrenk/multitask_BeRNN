@@ -140,7 +140,7 @@ def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
     ax.tick_params(axis='both', which='major', labelsize=fs)
 
     ax.set_ylim([0, 1])
-    ax.set_xlim([0, 216000])
+    ax.set_xlim([0, 80000])
     ax.set_xlabel('Trials per task',fontsize=fs, labelpad=2)
     ax.set_ylabel('Performance',fontsize=fs, labelpad=0)
     ax.locator_params(axis='x', nbins=5)
@@ -550,7 +550,7 @@ def networkx_illustration_BeRNN(model_dir):
 
 # todo: ################################################################################################################
 # todo: ################################################################################################################
-# model_dir = os.getcwd() + '\BeRNN_models\MH_200_train-error_validate-error'
+model_dir = os.getcwd() + '\BeRNN_models\JW_200_train-error_validate-error'
 rule = 'WM'
 # Plot activity of input, recurrent and output layer for one test trial
 easy_activity_plot_BeRNN(model_dir, rule)

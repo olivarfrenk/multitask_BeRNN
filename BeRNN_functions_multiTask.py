@@ -28,7 +28,6 @@ rules_dict = \
 ########################################################################################################################
 '''Network validation'''
 ########################################################################################################################
-
 def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
     """Do evaluation.
 
@@ -144,7 +143,6 @@ def do_eval_BeRNN(sess, model, log, rule_train, AllTasks_list):
 ########################################################################################################################
 '''Network training'''
 ########################################################################################################################
-
 # co: ALL TASKS ########################################################################################################
 def train_BeRNN(model_dir, hp=None, display_step=None, ruleset='BeRNN', rule_trains=None, rule_prob_map=None, seed=0, load_dir=None, trainables=None):
     """Train the network.
@@ -212,7 +210,8 @@ def train_BeRNN(model_dir, hp=None, display_step=None, ruleset='BeRNN', rule_tra
     # todo: ############################################################################################################
     # todo: ############################################################################################################
     # todo: Create taskList to generate trials from
-    xlsxFolder = os.getcwd() + '\\Data CSP\\MH\\'
+    # xlsxFolder = os.getcwd() + '\\Data CSP\\MH\\'
+    xlsxFolder = 'W:\\group_csp\\analyses\\oliver.frank\\BeRNN_main\\01_1\\'
     AllTasks_list = fileDict_error(xlsxFolder)
     random_AllTasks_list = random.sample(AllTasks_list, len(AllTasks_list))
 
@@ -298,8 +297,8 @@ def train_BeRNN(model_dir, hp=None, display_step=None, ruleset='BeRNN', rule_tra
         model.save()
         print("Optimization finished!")
 
-# # # Apply the network training
-# model_dir_BeRNN = os.getcwd() + '\\BeRNN_models\\SC_200_train-error_validate-error\\'
-# train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=None, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
+# # Apply the network training
+model_dir_BeRNN = os.getcwd() + '\\BeRNN_models\\01_1_1\\'
+train_BeRNN(model_dir=model_dir_BeRNN, seed=0, display_step=None, rule_trains=None, rule_prob_map=None, load_dir=None, trainables=None)
 
 

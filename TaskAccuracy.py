@@ -1,6 +1,9 @@
 import os
 import pandas as pd
 
+########################################################################################################################
+# todo: TaskAccuracy
+########################################################################################################################
 # Participant list
 participantList = os.listdir('W:/AG_CSP/Projekte/BeRNN/02_Daten/BeRNN_main/')
 
@@ -23,7 +26,6 @@ percentCorrect_WM_Ctx2, count_WM_Ctx2 = 0, 0
 # co: Download data as .xlsx long format
 list_testParticipant_month = os.listdir('W:/AG_CSP/Projekte/BeRNN/02_Daten/BeRNN_main/' + particpant + month)
 for i in list_testParticipant_month:
-    # print(i)
     currentFile = pd.read_excel('W:/AG_CSP/Projekte/BeRNN/02_Daten/BeRNN_main/' + particpant + month + i, engine='openpyxl')
     if isinstance(currentFile.iloc[0,28],float) == False: # avoid first rows with state questions .xlsx files
         # print(currentFile.iloc[0,28].split('_trials_')[0])
@@ -81,5 +83,90 @@ acc_RP_Ctx2 = percentCorrect_RP_Ctx2/count_RP_Ctx2
 # pd.DataFrame(data={'acc_WM_Ctx2':[acc_WM_Ctx2]})
 
 
+########################################################################################################################
+# todo: Plot training effect
+########################################################################################################################
+import os
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import linregress
+import matplotlib.dates as mdates
+# from datetime import timedelta
 
+# Specify the folder containing the .xlsx files
+participant, month = 'BeRNN_01', '/1/'
+folder_path = 'W:/AG_CSP/Projekte/BeRNN/02_Daten/BeRNN_main/' + participant + month
 
+# Define filenames and corresponding colors
+filename_color_dict = {
+    'DM': 'red', 'DM_Anti': 'orange',
+    'EF': 'blue', 'EF_Anti': 'darkblue',
+    'RP': 'green', 'RP_Anti': 'darkgreen',
+    'RP_Ctx1': 'limegreen', 'RP_Ctx2': 'forestgreen',
+    'WM': 'yellow', 'WM_Anti': 'gold',
+    'WM_Ctx1': 'lemonchiffon', 'WM_Ctx2': 'darkkhaki'
+}
+
+# Initialize empty lists to store combined x and y values
+all_x_values = []
+all_y_values = []
+
+for task in filename_color_dict:
+    print(task, filename_color_dict[task])
+
+    # Create right name for ycolumn
+    ycolumn = 'Store: PercentCorrect' + ''.join(task.split('_'))
+
+    # Initialize empty lists to store combined x and y values
+    all_x_values = []
+    all_y_values = []
+
+    # Iterate over all files in the folder
+    for filename in os.listdir(folder_path):
+        if filename.endswith(".xlsx"):
+            file_path = os.path.join(folder_path, filename)
+            # file_path = os.path.join(folder_path, 'data_exp_149474-v2_task-9ivx-9621849.xlsx')
+
+            # Load the Excel file into a DataFrame
+            df = pd.read_excel(file_path, engine='openpyxl')
+            if isinstance(df.iloc[0, 28], float) == False and df.iloc[0, 28].split('_trials_')[0] == task:
+                # Filter rows where "Event Index" is 125
+                filtered_rows = df[df['Event Index'] == 125].copy()
+                print(filename)
+
+                # Convert "Date and Time" to datetime format where possible
+                filtered_rows['Local Date and Time'] = pd.to_datetime(filtered_rows['Local Date and Time'], errors='coerce')
+                # Extract values from "Date and Time" and "Accuracy" columns
+                x_values = pd.to_datetime(filtered_rows['Local Date and Time'].dt.strftime('%d-%m-%Y'))
+                y_values = filtered_rows[ycolumn]
+
+                print('x_values: ', x_values)
+                print('y_values: ', y_values)
+
+                # Append values to the combined lists
+                all_x_values.extend(x_values)
+                all_y_values.extend(y_values)
+
+    # Plot the combined data
+    plt.scatter(all_x_values, all_y_values, color=filename_color_dict[task])
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.xlabel('Date and Time')
+    plt.ylabel('Accuracy')
+    plt.title('Training effect: ' + participant + month)
+    plt.xticks(rotation=45)  # Rotate x-axis labels for better visibility if needed
+    plt.xlim(all_x_values[0], all_x_values[-1])
+
+    # Calculate linear regression
+    all_x_values = mdates.date2num(all_x_values)
+    slope, intercept, r_value, p_value, std_err = linregress(all_x_values, all_y_values)
+    # Plot the regression line
+    regression_line = slope * np.array(all_x_values) + intercept
+    plt.plot(all_x_values, regression_line, color=filename_color_dict[task], label=task + ' ' + f'Regression (R^2={r_value ** 2:.2f})')
+
+    # Save the figure to the folder where the data is from
+    # Load figure plt.imread and use plt.figimage if you want to recombine several plots into on larger canvas later
+    figure_path = os.path.join(folder_path, participant + '_' + month.split('/')[1] + '_' + 'Training_Effect.png')
+    plt.savefig(figure_path, bbox_inches='tight')
+
+    plt.show()

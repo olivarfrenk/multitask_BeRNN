@@ -26,7 +26,7 @@ def add_x_loc(x_loc, pref):
 # DM & DM Anti
 def prepare_DM_error(file_location, sequence_on, sequence_off): # (model, loss_type, file_location, sequence_on, sequence_off)
     # For bug fixing
-    # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_DM_easy_1100.xlsx', 0, 48
+    file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_DM_easy_1100.xlsx', 0, 60
     # Open .xlsx and select necessary columns
     df = pd.read_excel(file_location, engine='openpyxl')
     # Add all necessary columns to create the Yang form later
@@ -94,17 +94,17 @@ def prepare_DM_error(file_location, sequence_on, sequence_off): # (model, loss_t
         numRespSteps = round(currentTrial['Onset Time'][1] / 20)  # equal to neuronal time constant of 20ms (Yang, 2019)
         numRespStepsTotal = numRespStepsTotal + numRespSteps
 
-    # numFixStepsAverage = round(numFixStepsTotal/iterationSteps)
-    # numRespStepsAverage = round(numRespStepsTotal/iterationSteps)
-    # TotalStepsAverage = numFixStepsAverage + numRespStepsAverage
+    numFixStepsAverage = round(numFixStepsTotal/iterationSteps)
+    numRespStepsAverage = round(numRespStepsTotal/iterationSteps)
+    TotalStepsAverage = numFixStepsAverage + numRespStepsAverage
 
     # todo: For bug fixing we will create equal sequence length for all sessions
     # todo: We also have to think of which part of the sequence represents mostly the cognitive paradigm and not other
     # todo confounding factors like reaction time etc.
     # todo: That is also where we can apply c-mask to weight certain epochs in sequence differently
-    numFixStepsAverage = 30
-    numRespStepsAverage = 70
-    TotalStepsAverage = numFixStepsAverage + numRespStepsAverage
+    # numFixStepsAverage = 30
+    # numRespStepsAverage = 70
+    # TotalStepsAverage = numFixStepsAverage + numRespStepsAverage
 
     # Take all trials and high-sample them to the average steps
     for i in incrementList:
@@ -1421,6 +1421,7 @@ def fileDict_error(xlsxFolder):
 
     # Fill list for different task difficulties over all participants
     for j in file_dict:
+        print(j)
         # co: Change here if you want to have general models trained with data from all/several participants
         xlsxFileList = os.listdir(xlsxFolder)
         # Fill all lists
