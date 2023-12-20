@@ -23,11 +23,10 @@ def add_x_loc(x_loc, pref):
     return 0.8 * np.exp(-dist ** 2 / 2)
 
 # Preperation functions ################################################################################################
-
 # DM & DM Anti
-def prepare_DM_correct(file_location, sequence_on, sequence_off): # (model, loss_type, file_location, sequence_on, sequence_off)
+# def prepare_DM_correct(file_location, sequence_on, sequence_off): # (model, loss_type, file_location, sequence_on, sequence_off)
     # For bug fixing
-    # file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_DM_easy_1100.xlsx', 0, 48
+    file_location, sequence_on, sequence_off = os.getcwd() + '\\Data CSP\\JW\\7962306_DM_easy_1100.xlsx', 0, 48
     # Open .xlsx and select necessary columns
     df = pd.read_excel(file_location, engine='openpyxl')
     # Add all necessary columns to create the Yang form later
@@ -79,8 +78,7 @@ def prepare_DM_correct(file_location, sequence_on, sequence_off): # (model, loss
     # Prepare incrementation for trials between fixation events in df
     incrementList = []
     for i in range(0, len(df_selection)):
-        if df_selection['Component Name'][
-            i] == 'Fixation':  # Get all rows with that string as they start a trial sequence
+        if df_selection['Component Name'][i] == 'Fixation':  # Get all rows with that string as they start a trial sequence
             incrementList.append(i + 1)
 
     # Get average epoch time steps for the selected task in one session
@@ -332,6 +330,14 @@ def prepare_DM_correct(file_location, sequence_on, sequence_off): # (model, loss
     # c_mask = add_c_mask_BeRNN(Output.shape[0], Output.shape[1], n_output, loss_type, numFixStepsAverage, numRespStepsAverage)
 
     return Input, Output, y_loc    #, c_mask
+
+
+
+
+
+
+
+
 
 # EF & EF Anti
 def prepare_EF_correct(file_location, sequence_on, sequence_off):

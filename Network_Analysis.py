@@ -2,6 +2,8 @@ import os
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+# import matplotlib
+# matplotlib.use('module://backend_interagg')
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -104,6 +106,8 @@ def easy_activity_plot_BeRNN(model_dir, rule):
                    interpolation='none', origin='lower')
         plt.title(title)
         plt.colorbar()
+
+        plt.ioff()
         plt.show()
 
 def plot_performanceprogress_BeRNN(model_dir, rule_plot=None):
@@ -509,48 +513,48 @@ def schematic_plot_BeRNN(model_dir, rule=None):
     # plt.savefig('figure/schematic_outputs.pdf',transparent=True)
     plt.show()
 
-def networkx_illustration_BeRNN(model_dir):
-    import networkx as nx
-
-    model = Model(model_dir)
-    with tf.Session() as sess:
-        model.restore()
-        # get all connection weights and biases as tensorflow variables
-        w_rec = sess.run(model.w_rec)
-
-    w_rec_flat = w_rec.flatten()
-    ind_sort = np.argsort(abs(w_rec_flat - np.mean(w_rec_flat)))
-    n_show = int(0.01 * len(w_rec_flat))
-    ind_gone = ind_sort[:-n_show]
-    ind_keep = ind_sort[-n_show:]
-    w_rec_flat[ind_gone] = 0
-    w_rec2 = np.reshape(w_rec_flat, w_rec.shape)
-    w_rec_keep = w_rec_flat[ind_keep]
-    G = nx.from_numpy_array(abs(w_rec2), create_using=nx.DiGraph())
-
-    color = w_rec_keep
-    fig = plt.figure(figsize=(4, 4))
-    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-    nx.draw(G,
-            linewidths=0,
-            width=0.1,
-            alpha=1.0,
-            edge_vmin=-3,
-            edge_vmax=3,
-            arrows=False,
-            pos=nx.circular_layout(G),
-            node_color=np.array([99. / 255] * 3),
-            node_size=10,
-            edge_color=color,
-            edge_cmap=plt.cm.RdBu_r,
-            ax=ax)
-    # plt.savefig('figure/illustration_networkx.pdf', transparent=True)
+# def networkx_illustration_BeRNN(model_dir):
+#     import networkx as nx
+#
+#     model = Model(model_dir)
+#     with tf.Session() as sess:
+#         model.restore()
+#         # get all connection weights and biases as tensorflow variables
+#         w_rec = sess.run(model.w_rec)
+#
+#     w_rec_flat = w_rec.flatten()
+#     ind_sort = np.argsort(abs(w_rec_flat - np.mean(w_rec_flat)))
+#     n_show = int(0.01 * len(w_rec_flat))
+#     ind_gone = ind_sort[:-n_show]
+#     ind_keep = ind_sort[-n_show:]
+#     w_rec_flat[ind_gone] = 0
+#     w_rec2 = np.reshape(w_rec_flat, w_rec.shape)
+#     w_rec_keep = w_rec_flat[ind_keep]
+#     G = nx.from_numpy_array(abs(w_rec2), create_using=nx.DiGraph())
+#
+#     color = w_rec_keep
+#     fig = plt.figure(figsize=(4, 4))
+#     ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+#     nx.draw(G,
+#             linewidths=0,
+#             width=0.1,
+#             alpha=1.0,
+#             edge_vmin=-3,
+#             edge_vmax=3,
+#             arrows=False,
+#             pos=nx.circular_layout(G),
+#             node_color=np.array([99. / 255] * 3),
+#             node_size=10,
+#             edge_color=color,
+#             edge_cmap=plt.cm.RdBu_r,
+#             ax=ax)
+#     # plt.savefig('figure/illustration_networkx.pdf', transparent=True)
 
 
 
 # todo: ################################################################################################################
 # todo: ################################################################################################################
-model_dir = os.getcwd() + '\BeRNN_models\JW_200_train-error_validate-error'
+model_dir = os.getcwd() + '\BeRNN_models\JW_200_train-error_validate-error_new'
 rule = 'WM'
 # Plot activity of input, recurrent and output layer for one test trial
 easy_activity_plot_BeRNN(model_dir, rule)
@@ -563,13 +567,13 @@ pretty_inputoutput_plot_BeRNN(model_dir,rule)
 
 schematic_plot_BeRNN(model_dir, rule)
 
-networkx_illustration_BeRNN(model_dir)
+# networkx_illustration_BeRNN(model_dir)
 
 
 #######################################################################################################################
 # Clustering
 #######################################################################################################################
-model_dir = os.getcwd() + '\BeRNN_models\OLD\MH_200_train-error_validate-error_new'
+model_dir = os.getcwd() + '\BeRNN_models\MH_200_train-error_validate-error_new'
 # model_dir = os.getcwd() + '\BeRNN_models\OLD\MH_200_train-err_validate-err'
 def compute_n_cluster(model_dir):
 # for model_dir in model_dirs:
@@ -600,3 +604,9 @@ def compute_n_cluster(model_dir):
     print("done")
 
 compute_n_cluster(model_dir)
+
+
+import platform
+
+# Get the bitness of the Python interpreter
+python_bitness = platform.architecture()[0]

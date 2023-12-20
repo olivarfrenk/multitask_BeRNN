@@ -7,7 +7,7 @@ import pandas as pd
 # Participant list
 participantList = os.listdir('W:/AG_CSP/Projekte/BeRNN/02_Daten/BeRNN_main/')
 
-particpant = participantList[5] # choose which particpant to analyze
+participant = participantList[4] # choose which particpant to analyze
 month = '/1/' # choose which month to analyze
 
 percentCorrect_DM, count_DM = 0, 0
@@ -24,47 +24,106 @@ percentCorrect_WM_Ctx1, count_WM_Ctx1 = 0, 0
 percentCorrect_WM_Ctx2, count_WM_Ctx2 = 0, 0
 
 # co: Download data as .xlsx long format
-list_testParticipant_month = os.listdir('W:/AG_CSP/Projekte/BeRNN/02_Daten/BeRNN_main/' + particpant + month)
+list_testParticipant_month = os.listdir('W:/AG_CSP/Projekte/BeRNN/02_Daten/BeRNN_main/' + participant + month)
 for i in list_testParticipant_month:
-    currentFile = pd.read_excel('W:/AG_CSP/Projekte/BeRNN/02_Daten/BeRNN_main/' + particpant + month + i, engine='openpyxl')
+    currentFile = pd.read_excel('W:/AG_CSP/Projekte/BeRNN/02_Daten/BeRNN_main/' + participant + month + i, engine='openpyxl')
     if isinstance(currentFile.iloc[0,28],float) == False: # avoid first rows with state questions .xlsx files
         # print(currentFile.iloc[0,28].split('_trials_')[0])
         if currentFile.iloc[0,28].split('_trials_')[0] == 'DM':
-            percentCorrect_DM += currentFile['Store: PercentCorrectDM'][len(currentFile['Store: PercentCorrectDM'])-3]
-            count_DM += 1
+            # percentCorrect_DM += currentFile['Store: PercentCorrectDM'][len(currentFile['Store: PercentCorrectDM'])-3]
+            # count_DM += 1
+
+            filtered_rows = currentFile[currentFile['Event Index'] == 125].copy()
+            percentCorrect_DM += sum(filtered_rows['Store: PercentCorrectDM'])
+            count_DM += len(filtered_rows)
+
         if currentFile.iloc[0,28].split('_trials_')[0] == 'DM_Anti':
-            percentCorrect_DM_Anti += currentFile['Store: PercentCorrectDMAnti'][len(currentFile['Store: PercentCorrectDMAnti'])-3]
-            count_DM_Anti += 1
+            # percentCorrect_DM_Anti += currentFile['Store: PercentCorrectDMAnti'][len(currentFile['Store: PercentCorrectDMAnti'])-3]
+            # count_DM_Anti += 1
+
+            filtered_rows = currentFile[currentFile['Event Index'] == 125].copy()
+            percentCorrect_DM_Anti += sum(filtered_rows['Store: PercentCorrectDMAnti'])
+            count_DM_Anti += len(filtered_rows)
+
         if currentFile.iloc[0,28].split('_trials_')[0] == 'EF':
-            percentCorrect_EF += currentFile['Store: PercentCorrectEF'][len(currentFile['Store: PercentCorrectEF'])-3]
-            count_EF += 1
+            # percentCorrect_EF += currentFile['Store: PercentCorrectEF'][len(currentFile['Store: PercentCorrectEF'])-3]
+            # count_EF += 1
+
+            filtered_rows = currentFile[currentFile['Event Index'] == 125].copy()
+            percentCorrect_EF += sum(filtered_rows['Store: PercentCorrectEF'])
+            count_EF += len(filtered_rows)
+
         if currentFile.iloc[0,28].split('_trials_')[0] == 'EF_Anti':
-            percentCorrect_EF_Anti += currentFile['Store: PercentCorrectEF'][len(currentFile['Store: PercentCorrectEF'])-3] # no extra displays for Anti were made
-            count_EF_Anti += 1
+            # percentCorrect_EF_Anti += currentFile['Store: PercentCorrectEFAnti'][len(currentFile['Store: PercentCorrectEFAnti'])-3] # no extra displays for Anti were made
+            # count_EF_Anti += 1
+
+            filtered_rows = currentFile[currentFile['Event Index'] == 125].copy()
+            percentCorrect_EF_Anti += sum(filtered_rows['Store: PercentCorrectEFAnti'])
+            count_EF_Anti += len(filtered_rows)
+
         if currentFile.iloc[0,28].split('_trials_')[0] == 'RP':
-            percentCorrect_RP += currentFile['Store: PercentCorrectRP'][len(currentFile['Store: PercentCorrectRP'])-3]
-            count_RP += 1
+            # percentCorrect_RP += currentFile['Store: PercentCorrectRP'][len(currentFile['Store: PercentCorrectRP'])-3]
+            # count_RP += 1
+
+            filtered_rows = currentFile[currentFile['Event Index'] == 125].copy()
+            percentCorrect_RP += sum(filtered_rows['Store: PercentCorrectRP'])
+            count_RP += len(filtered_rows)
+
         if currentFile.iloc[0,28].split('_trials_')[0] == 'RP_Anti':
-            percentCorrect_RP_Anti += currentFile['Store: PercentCorrectRPAnti'][len(currentFile['Store: PercentCorrectRPAnti'])-3]
-            count_RP_Anti += 1
+            # percentCorrect_RP_Anti += currentFile['Store: PercentCorrectRPAnti'][len(currentFile['Store: PercentCorrectRPAnti'])-3]
+            # count_RP_Anti += 1
+
+            filtered_rows = currentFile[currentFile['Event Index'] == 125].copy()
+            percentCorrect_RP_Anti += sum(filtered_rows['Store: PercentCorrectRPAnti'])
+            count_RP_Anti += len(filtered_rows)
+
         if currentFile.iloc[0,28].split('_trials_')[0] == 'RP_Ctx1':
-            percentCorrect_RP_Ctx1 += currentFile['Store: PercentCorrectRPCtx1'][len(currentFile['Store: PercentCorrectRPCtx1'])-3]
-            count_RP_Ctx1 += 1
+            # percentCorrect_RP_Ctx1 += currentFile['Store: PercentCorrectRPCtx1'][len(currentFile['Store: PercentCorrectRPCtx1'])-3]
+            # count_RP_Ctx1 += 1
+
+            filtered_rows = currentFile[currentFile['Event Index'] == 125].copy()
+            percentCorrect_RP_Ctx1 += sum(filtered_rows['Store: PercentCorrectRPCtx1'])
+            count_RP_Ctx1 += len(filtered_rows)
+
         if currentFile.iloc[0,28].split('_trials_')[0] == 'RP_Ctx2':
-            percentCorrect_RP_Ctx2 += currentFile['Store: PercentCorrectRPCtx2'][len(currentFile['Store: PercentCorrectRPCtx2'])-3]
-            count_RP_Ctx2 += 1
+            # percentCorrect_RP_Ctx2 += currentFile['Store: PercentCorrectRPCtx2'][len(currentFile['Store: PercentCorrectRPCtx2'])-3]
+            # count_RP_Ctx2 += 1
+
+            filtered_rows = currentFile[currentFile['Event Index'] == 125].copy()
+            percentCorrect_RP_Ctx2 += sum(filtered_rows['Store: PercentCorrectRPCtx2'])
+            count_RP_Ctx2 += len(filtered_rows)
+
         if currentFile.iloc[0,28].split('_trials_')[0] == 'WM':
-            percentCorrect_WM += currentFile['Store: PercentCorrectWM'][len(currentFile['Store: PercentCorrectWM'])-3]
-            count_WM += 1
+            # percentCorrect_WM += currentFile['Store: PercentCorrectWM'][len(currentFile['Store: PercentCorrectWM'])-3]
+            # count_WM += 1
+
+            filtered_rows = currentFile[currentFile['Event Index'] == 125].copy()
+            percentCorrect_WM += sum(filtered_rows['Store: PercentCorrectWM'])
+            count_WM += len(filtered_rows)
+
         if currentFile.iloc[0,28].split('_trials_')[0] == 'WM_Anti':
-            percentCorrect_WM_Anti += currentFile['Store: PercentCorrectWMAnti'][len(currentFile['Store: PercentCorrectWMAnti'])-3]
-            count_WM_Anti += 1
+            # percentCorrect_WM_Anti += currentFile['Store: PercentCorrectWMAnti'][len(currentFile['Store: PercentCorrectWMAnti'])-3]
+            # count_WM_Anti += 1
+
+            filtered_rows = currentFile[currentFile['Event Index'] == 125].copy()
+            percentCorrect_WM_Anti += sum(filtered_rows['Store: PercentCorrectWMAnti'])
+            count_WM_Anti += len(filtered_rows)
+
         if currentFile.iloc[0,28].split('_trials_')[0] == 'WM_Ctx1':
-            percentCorrect_WM_Ctx1 += currentFile['Store: PercentCorrectWMCtx1'][len(currentFile['Store: PercentCorrectWMCtx1'])-3]
-            count_WM_Ctx1 += 1
+            # percentCorrect_WM_Ctx1 += currentFile['Store: PercentCorrectWMCtx1'][len(currentFile['Store: PercentCorrectWMCtx1'])-3]
+            # count_WM_Ctx1 += 1
+
+            filtered_rows = currentFile[currentFile['Event Index'] == 125].copy()
+            percentCorrect_WM_Ctx1 += sum(filtered_rows['Store: PercentCorrectWMCtx1'])
+            count_WM_Ctx1 += len(filtered_rows)
+
         if currentFile.iloc[0,28].split('_trials_')[0] == 'WM_Ctx2':
-            percentCorrect_WM_Ctx2 += currentFile['Store: PercentCorrectWMCtx2'][len(currentFile['Store: PercentCorrectWMCtx2'])-3]
-            count_WM_Ctx2 += 1
+            # percentCorrect_WM_Ctx2 += currentFile['Store: PercentCorrectWMCtx2'][len(currentFile['Store: PercentCorrectWMCtx2'])-3]
+            # count_WM_Ctx2 += 1
+
+            filtered_rows = currentFile[currentFile['Event Index'] == 125].copy()
+            percentCorrect_WM_Ctx2 += sum(filtered_rows['Store: PercentCorrectWMCtx2'])
+            count_WM_Ctx2 += len(filtered_rows)
 
 acc_DM = percentCorrect_DM/count_DM
 acc_DM_Anti = percentCorrect_DM_Anti/count_DM_Anti
@@ -95,7 +154,6 @@ import matplotlib.dates as mdates
 # from datetime import timedelta
 
 # Specify the folder containing the .xlsx files
-participant, month = 'BeRNN_01', '/1/'
 folder_path = 'W:/AG_CSP/Projekte/BeRNN/02_Daten/BeRNN_main/' + participant + month
 
 # Define filenames and corresponding colors
@@ -148,25 +206,31 @@ for task in filename_color_dict:
                 all_x_values.extend(x_values)
                 all_y_values.extend(y_values)
 
-    # Plot the combined data
+    # Plot the task-related data
     plt.scatter(all_x_values, all_y_values, color=filename_color_dict[task])
-    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-    plt.xlabel('Date and Time')
-    plt.ylabel('Accuracy')
-    plt.title('Training effect: ' + participant + month)
-    plt.xticks(rotation=45)  # Rotate x-axis labels for better visibility if needed
-    plt.xlim(all_x_values[0], all_x_values[-1])
 
     # Calculate linear regression
     all_x_values = mdates.date2num(all_x_values)
     slope, intercept, r_value, p_value, std_err = linregress(all_x_values, all_y_values)
+
     # Plot the regression line
     regression_line = slope * np.array(all_x_values) + intercept
-    plt.plot(all_x_values, regression_line, color=filename_color_dict[task], label=task + ' ' + f'Regression (R^2={r_value ** 2:.2f})')
+    plt.plot(all_x_values, regression_line, color=filename_color_dict[task],
+             label=task + ' ' + f'Regression (R^2={r_value ** 2:.2f})')
 
-    # Save the figure to the folder where the data is from
-    # Load figure plt.imread and use plt.figimage if you want to recombine several plots into on larger canvas later
-    figure_path = os.path.join(folder_path, participant + '_' + month.split('/')[1] + '_' + 'Training_Effect.png')
-    plt.savefig(figure_path, bbox_inches='tight')
+plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+plt.xlabel('Date and Time')
+plt.ylabel('Accuracy')
+plt.title('Training effect: ' + participant + month)
+plt.xticks(rotation=45)  # Rotate x-axis labels for better visibility if needed
+plt.xlim(all_x_values[0], all_x_values[-1])
 
-    plt.show()
+# Save the figure to the folder where the data is from
+# Load figure plt.imread and use plt.figimage if you want to recombine several plots into on larger canvas later
+figure_path = os.path.join(folder_path, participant + '_' + month.split('/')[1] + '_' + 'Training_Effect.png')
+plt.savefig(figure_path, bbox_inches='tight')
+
+plt.tight_layout()
+
+plt.show()
+
